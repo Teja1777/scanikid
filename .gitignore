@@ -1,0 +1,38 @@
+# See https://help.github.com/articles/ignoring-files/
+
+# General
+.DS_Store
+.atom/
+.history
+.svn/
+
+# IDE files
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Flutter/Dart project files
+scanikid12/.dart_tool/
+scanikid12/.packages
+scanikid12/.pub/
+scanikid12/build/
+scanikid12/.flutter-plugins
+scanikid12/.flutter-plugins-dependencies
+scanikid12/.metadata
+
+# Generated files
+scanikid12/*.g.dart
+scanikid12/*.freezed.dart
+
+# Platform-specific generated files
+scanikid12/ios/Pods/
+scanikid12/ios/Flutter/
+scanikid12/macos/Flutter/GeneratedPluginRegistrant.swift
+scanikid12/macos/Pods/
+scanikid12/windows/flutter/generated_*.cc
+scanikid12/windows/flutter/generated_*.h
+scanikid12/windows/flutter/generated_*.cmake
+scanikid12/linux/flutter/generated_*.cc
+scanikid12/linux/flutter/generated_*.h
+scanikid12/linux/flutter/generated_*.cmake

@@ -1,0 +1,17 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Force Unix-style line endings for files that should always have them for consistency.
+*.sh eol=lf
+*.dart eol=lf
+*.yaml eol=lf
+*.yml eol=lf
+*.md eol=lf
+*.gradle eol=lf
+
+# These are binary files and should be treated as such.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
