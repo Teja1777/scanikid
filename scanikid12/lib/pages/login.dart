@@ -19,6 +19,7 @@ class _Loginpagestate extends State<Loginpage > {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        
        body:Stack(
         children: [
           Container(
