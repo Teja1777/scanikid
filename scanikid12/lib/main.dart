@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 
 import 'package:scanikid12/pages/login.dart';
-//teja
+
+
 void main() {
   runApp(const MyApp());
 }
