@@ -13,11 +13,10 @@ import 'package:scanikid12/pages/list.dart';
 void main() {
   runApp(const MyApp());
 }
-//teja
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-//vinod
-//krithika
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
