@@ -20,7 +20,7 @@ class _Loginpagestate extends State<Loginpage > {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         
-       body:Stack(
+      body:Stack(
         children: [
           Container(
             padding: const EdgeInsets.only(top: 200, left: 50, right: 50),
