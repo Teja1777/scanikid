@@ -4,7 +4,7 @@ import 'package:scanikid12/pages/login.dart';
 void main() {
   runApp(const MyApp());
 }
-
+//srija
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
