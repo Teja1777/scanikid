@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-
 import 'package:scanikid12/pages/login.dart';
 
 void main() {
