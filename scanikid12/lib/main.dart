@@ -13,7 +13,7 @@ import 'package:scanikid12/pages/list.dart';
 void main() {
   runApp(const MyApp());
 }
-
+//teja
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 //vinod
