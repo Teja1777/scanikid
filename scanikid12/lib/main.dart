@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scanikid12/pages/login.dart';
+import 'package:scanikid12/pages/home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Loginpage(),
+      home: Home(),
       routes: {
-        
        '/login': (context) => const Loginpage(),
+       '/home': (context) => const Home(),
       },
     );
   }

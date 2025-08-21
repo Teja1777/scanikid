@@ -91,7 +91,7 @@ class _Loginpagestate extends State<Loginpage > {
                     children:[
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/second');
+                      
                         },
                         child: const Text(
                           'sign up?',
