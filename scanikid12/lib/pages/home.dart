@@ -23,13 +23,13 @@ class Home extends StatelessWidget {
                     color: Color(0xFF4ADE80),
                   ),
                 ),
-                const SizedBox(height: 48), 
+                const SizedBox(height: 48),
                 Image.asset(
                   'assets/img/kid0.png',
                   width: 192,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 64), 
+                const SizedBox(height: 64),
                 SizedBox(
                   width: 320,
                   child: Column(
@@ -38,22 +38,20 @@ class Home extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                           
+                            Navigator.pushNamed(context, '/parent_login');
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6), 
+                            backgroundColor: const Color(0xFF3B82F6),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0), 
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
-                            elevation: 5, 
+                            elevation: 5,
                           ),
                           child: const Text(
                             'Parent',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600, 
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -62,22 +60,20 @@ class Home extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                          
+                            Navigator.pushNamed(context, '/vendor_login');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF8B5CF6),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0), 
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                             elevation: 5,
                           ),
                           child: const Text(
                             'Vendor',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600, 
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
