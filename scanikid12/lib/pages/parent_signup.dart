@@ -144,7 +144,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
 
                         style: TextStyle(
                           color: Color(0xFF01060A),
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                       ),
                     ),

@@ -3,6 +3,7 @@ import 'package:scanikid12/pages/parent_login.dart';
 import 'package:scanikid12/pages/home.dart';
 import 'package:scanikid12/pages/parent_signup.dart';
 import 'package:scanikid12/pages/vendor_login.dart';
+import 'package:scanikid12/pages/vendor_signup.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       '/parent_login': (context) => const ParentLoginPage(),
       '/parent_signup': (context) => const ParentSignUpPage(),
       '/vendor_login': (context) => const VendorLoginPage(),
+      '/vendor_signup': (context) => const VendorSignUpPage(),
       },
     );
   }
