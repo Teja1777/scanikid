@@ -24,8 +24,8 @@ class Home extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 48), 
-                Image.network(
-                  'https://lh3.googleusercontent.com/aida-public/AB6AXuBjl-Fka4h6ZyGQBDHmKZVyMMIv-40wGvi_fKGxsCzbZa0z2dA22tBE2iW_1i_m9VoMcLDMaafg1vCNvM7zbxm6GCOvtMnWTyjWejwA3hL2umiwBF-wXF_QUPsm9WcI66kaxrNcrGceXj4aSmgEG_tQy-Gf1usfSdtJeADrlvqFTSmd7s_tBklji3KkcHjlzbk5FKT49zbSv6ueT36x7FloaTfeWWPhQucGb2vcfl8wunxufLpOkuiptbY2JAzTYoJXJD34oMtTbSM',
+                Image.asset(
+                  'assets/img/kid0.png',
                   width: 192,
                   fit: BoxFit.contain,
                 ),
