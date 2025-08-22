@@ -126,26 +126,25 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              Navigator.pop(context);
+                              Navigator.pushReplacementNamed(context, '/parent_login');
                             },
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 40),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Already have an account? Sign In',
-
-                        style: TextStyle(
-                          color: Color(0xFF01060A),
-                          fontSize: 18,
+                                          TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/parent_login');
+                        },
+                        child: const Text(
+                          'Already have an account? Sign In',
+                          style: TextStyle(
+                            color: Color(0xFF01060A),
+                            fontSize: 18,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

@@ -96,7 +96,10 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/home');
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/vendor_dashboard',
+                              );
                             },
                           ),
                         ),

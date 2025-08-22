@@ -126,7 +126,7 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/vendor_login');
+                              Navigator.pushReplacementNamed(context, '/vendor_login');
                             },
                           ),
                         ),

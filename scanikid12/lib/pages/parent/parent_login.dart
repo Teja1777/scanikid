@@ -102,7 +102,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/home');
+                              Navigator.pushReplacementNamed(context, '/parent_dashboard');
                             },
                           ),
                         ),
