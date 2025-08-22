@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:scanikid12/pages/parent_login.dart';
+import 'package:scanikid12/pages/parent/parent_login.dart';
 import 'package:scanikid12/pages/home.dart';
-import 'package:scanikid12/pages/parent_signup.dart';
-import 'package:scanikid12/pages/vendor_login.dart';
-import 'package:scanikid12/pages/vendor_signup.dart';
+import 'package:scanikid12/pages/parent/parent_signup.dart';
+import 'package:scanikid12/pages/vendor/vendor_login.dart';
+import 'package:scanikid12/pages/vendor/vendor_signup.dart';
 
 void main() {
   runApp(const MyApp());
