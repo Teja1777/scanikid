@@ -31,14 +31,8 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
     );
 
     return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/img/vendor1.png'),
-          fit: BoxFit.contain,
-        ),
-      ),
+      decoration: const BoxDecoration(),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Stack(
           children: [

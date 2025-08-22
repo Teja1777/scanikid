@@ -27,22 +27,16 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     );
 
     return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/img/vendor1.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+      decoration: const BoxDecoration(),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
             Container(
               padding: const EdgeInsets.only(top: 200, left: 50, right: 50),
               child: const Text(
-                'welcome to scanikid',
+                'Welcome to Vendor Login',
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 27,
                   color: Color(0xFF79BB74),
                   fontWeight: FontWeight.bold,
                 ),

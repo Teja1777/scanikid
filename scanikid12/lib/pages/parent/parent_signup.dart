@@ -24,8 +24,6 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-
-
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -39,7 +37,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
         body: Stack(
           children: [
             Container(
-            padding: const EdgeInsets.only(top: 100, left: 50, right: 50),
+              padding: const EdgeInsets.only(top: 100, left: 50, right: 50),
               child: const Text(
                 'Create Account',
                 style: TextStyle(
