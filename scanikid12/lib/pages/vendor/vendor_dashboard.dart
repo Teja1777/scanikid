@@ -180,7 +180,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () {
-                // TODO: Implement manual ID entry logic
+          
               },
               child: const Text('Enter Student ID Manually'),
             ),
