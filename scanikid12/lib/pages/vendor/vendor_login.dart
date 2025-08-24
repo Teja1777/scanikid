@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ParentLoginPage extends StatefulWidget {
-  const ParentLoginPage({super.key});
+class VendorLoginPage extends StatefulWidget {
+  const VendorLoginPage({super.key});
 
   @override
-  State<ParentLoginPage> createState() => _ParentLoginPageState();
+  State<VendorLoginPage> createState() => _VendorLoginPageState();
 }
 
-class _ParentLoginPageState extends State<ParentLoginPage> {
+class _VendorLoginPageState extends State<VendorLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -21,25 +21,22 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
   @override
   Widget build(BuildContext context) {
     const darkBoldTextStyle = TextStyle(
-        color: Color(0xFF040C13), fontSize: 20, fontWeight: FontWeight.bold);
+      color: Color(0xFF040C13),
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    );
 
     return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/img/kid2.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+      decoration: const BoxDecoration(),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
             Container(
               padding: const EdgeInsets.only(top: 200, left: 50, right: 50),
               child: const Text(
-                'welcome to scanikid',
+                'Welcome to Vendor Login',
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 27,
                   color: Color(0xFF79BB74),
                   fontWeight: FontWeight.bold,
                 ),
@@ -48,9 +45,10 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
             SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * 0.5,
-                    left: 50,
-                    right: 50),
+                  top: MediaQuery.of(context).size.height * 0.5,
+                  left: 50,
+                  right: 50,
+                ),
                 child: Column(
                   children: [
                     TextField(
@@ -64,9 +62,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         filled: true,
                       ),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
@@ -79,9 +75,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         filled: true,
                       ),
                     ),
-                    const SizedBox(
-                      height: 70,
-                    ),
+                    const SizedBox(height: 70),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -97,33 +91,41 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                           radius: 20,
                           backgroundColor: const Color(0xFF01060A),
                           child: IconButton(
-                              icon: const Icon(Icons.arrow_forward_ios,
-                                  color: Colors.white),
-                              onPressed: () {
-                              
-                                Navigator.pushReplacementNamed(context, '/home');
-                              }),
+                            icon: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/vendor_dashboard',
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(
-                      height: 50,
-                    ),
+                    const SizedBox(height: 50),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, '/parent_signup');
+                            Navigator.pushNamed(context, '/vendor_signup');
                           },
-                          child: const Text('Sign Up?', style: darkBoldTextStyle),
+                          child: const Text(
+                            'Sign Up?',
+                            style: darkBoldTextStyle,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
                             
                           },
-                          child: const Text('Forgot Password?',
-                              style: darkBoldTextStyle),
+                          child: const Text(
+                            'Forgot Password?',
+                            style: darkBoldTextStyle,
+                          ),
                         ),
                       ],
                     ),
@@ -131,7 +133,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                 ),
               ),
             ),
-          ], 
+          ], // Stack children
         ),
       ),
     );

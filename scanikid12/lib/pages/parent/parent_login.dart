@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
 
-class ParentSignUpPage extends StatefulWidget {
-  const ParentSignUpPage({super.key});
+class ParentLoginPage extends StatefulWidget {
+  const ParentLoginPage({super.key});
 
   @override
-  State<ParentSignUpPage> createState() => _ParentSignUpPageState();
+  State<ParentLoginPage> createState() => _ParentLoginPageState();
 }
 
-class _ParentSignUpPageState extends State<ParentSignUpPage> {
-  final _nameController = TextEditingController();
+class _ParentLoginPageState extends State<ParentLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-
+    const darkBoldTextStyle = TextStyle(
+      color: Color(0xFF040C13),
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -35,15 +35,14 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Stack(
           children: [
             Container(
-            padding: const EdgeInsets.only(top: 100, left: 50, right: 50),
+              padding: const EdgeInsets.only(top: 200, left: 50, right: 50),
               child: const Text(
-                'Create Account',
+                'Welcome to Parent Login',
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 27,
                   color: Color(0xFF79BB74),
                   fontWeight: FontWeight.bold,
                 ),
@@ -52,24 +51,12 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
             SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * 0.2,
+                  top: MediaQuery.of(context).size.height * 0.5,
                   left: 50,
                   right: 50,
                 ),
                 child: Column(
                   children: [
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: 'Full Name',
-                        fillColor: Colors.grey[100],
-                        filled: true,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
@@ -94,25 +81,12 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                         filled: true,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: 'Confirm Password',
-                        fillColor: Colors.grey[100],
-                        filled: true,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 70),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Sign Up',
+                          'Sign In',
                           style: TextStyle(
                             color: Color(0xFF01060A),
                             fontSize: 30,
@@ -128,25 +102,33 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              Navigator.pop(context);
+                              Navigator.pushReplacementNamed(context, '/parent_dashboard');
                             },
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 40),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Already have an account? Sign In',
-
-                        style: TextStyle(
-                          color: Color(0xFF01060A),
-                          fontSize: 18,
+                    const SizedBox(height: 50),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/parent_signup');
+                          },
+                          child: const Text(
+                            'Sign Up?',
+                            style: darkBoldTextStyle,
+                          ),
                         ),
-                      ),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'Forgot Password?',
+                            style: darkBoldTextStyle,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

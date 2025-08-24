@@ -26,7 +26,7 @@ class Home extends StatelessWidget {
                 const SizedBox(height: 48),
                 Image.asset(
                   'assets/img/kid0.png',
-                  width: 192,
+                  width: 200,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 64),
