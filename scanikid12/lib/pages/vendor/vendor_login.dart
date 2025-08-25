@@ -113,7 +113,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                     ),
                     const SizedBox(height: 50),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         TextButton(
                           onPressed: () {

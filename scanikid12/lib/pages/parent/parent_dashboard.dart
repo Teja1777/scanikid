@@ -228,7 +228,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   Widget _buildPurchasesContent() {
     return const Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 48.0),
+        padding: EdgeInsets.symmetric(vertical: 45.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -254,7 +254,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   Widget _buildNotificationsContent() {
     return const Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 48.0),
+        padding: EdgeInsets.symmetric(vertical: 45.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
