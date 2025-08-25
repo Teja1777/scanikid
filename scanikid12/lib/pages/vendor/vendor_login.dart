@@ -89,7 +89,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                           'Sign In',
                           style: TextStyle(
                             color: Color(0xFF01060A),
-                            fontSize: 30,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -111,7 +111,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 40),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

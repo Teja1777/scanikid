@@ -196,12 +196,12 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             Row(
               children: List.generate(_tabs.length, (index) {
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
+                  padding: const EdgeInsets.only(right: 5.0),
                   child: _buildTabButton(index),
                 );
               }),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 30),
             // This widget will now build the content based on the selected tab
             _buildSelectedTabContent(),
           ],
