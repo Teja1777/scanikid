@@ -152,7 +152,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           const SizedBox(width: 8),
           const Center(
             child: Text(
-              'parent',
+              'parent', 
               style: TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
