@@ -147,12 +147,12 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
         actions: [
           const CircleAvatar(
             backgroundColor: Colors.deepPurple,
-            child: Text('V', style: TextStyle(color: Colors.white)),
+            child: Text('P', style: TextStyle(color: Colors.white)),
           ),
           const SizedBox(width: 8),
           const Center(
             child: Text(
-              'vinod',
+              'parent',
               style: TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
