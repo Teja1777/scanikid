@@ -129,7 +129,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                             
                           },
                           child: const Text(
-                            'Forgot Password?',
+                            'Forgot Password',
                             style: darkBoldTextStyle,
                           ),
                         ),

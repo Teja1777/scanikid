@@ -192,16 +192,16 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
               'Manage your children and their purchases',
               style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               children: List.generate(_tabs.length, (index) {
                 return Padding(
-                  padding: const EdgeInsets.only(right: 5.0),
+                  padding: const EdgeInsets.only(right:1.0),
                   child: _buildTabButton(index),
                 );
               }),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             // This widget will now build the content based on the selected tab
             _buildSelectedTabContent(),
           ],
