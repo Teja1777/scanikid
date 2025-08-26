@@ -29,7 +29,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     return Container(
      decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/img/vendor.jpg'),
+          image: AssetImage('assets/img/vendor2.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -38,12 +38,12 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
         body: Stack(
           children: [
             Container(
-              padding: const EdgeInsets.only(top: 200, left: 50, right: 50),
+              padding: const EdgeInsets.only(top: 100, left: 100, right: 50),
               child: const Text(
                 'Welcome to Vendor Login',
                 style: TextStyle(
                   fontSize: 27,
-                  color: Color(0xFF79BB74),
+                  color: Color.fromARGB(255, 2, 3, 2),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -81,7 +81,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                         filled: true,
                       ),
                     ),
-                    const SizedBox(height: 70),
+                    const SizedBox(height: 130),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
