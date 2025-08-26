@@ -89,7 +89,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                           'Sign In',
                           style: TextStyle(
                             color: Color(0xFF01060A),
-                            fontSize: 30,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -108,9 +108,9 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 40),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         TextButton(
                           onPressed: () {
@@ -124,7 +124,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         TextButton(
                           onPressed: () {},
                           child: const Text(
-                            'Forgot Password?',
+                            'Forgot Password',
                             style: darkBoldTextStyle,
                           ),
                         ),
