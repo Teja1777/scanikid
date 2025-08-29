@@ -37,17 +37,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // Button to toggle the flashlight
           IconButton(
             onPressed: () => _scannerController.toggleTorch(),
-            icon: ValueListenableBuilder<TorchState>(
-              valueListenable: _scannerController.torchState,
-              builder: (context, state, child) {
-                switch (state) {
-                  case TorchState.off:
-                    return const Icon(Icons.flash_off, color: Colors.grey);
-                  case TorchState.on:
-                    return const Icon(Icons.flash_on, color: Colors.yellow);
-                }
-              },
-            ),
+            icon: const Icon(Icons.flash_on),
           ),
           // Button to switch between front and back cameras
           IconButton(
@@ -90,12 +80,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // A label to guide the user
           Positioned(
             bottom: 100,
-                          child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color.fromRGBO(0, 0, 0, 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: const Text(
                 'Place QR code in the frame to scan',
                 style: TextStyle(color: Colors.white),
@@ -144,16 +134,19 @@ class QrScannerOverlayShape extends ShapeBorder {
     }
 
     return getLeftTopPath(rect)
-      ..lineTo(
-          rect.right - borderLength, rect.top) // Move to Right Top corner
+      ..lineTo(rect.right - borderLength, rect.top) // Move to Right Top corner
       ..lineTo(rect.right, rect.top)
       ..lineTo(rect.right, rect.top + borderLength)
-      ..lineTo(rect.right,
-          rect.bottom - borderLength) // Move to Right Bottom corner
+      ..lineTo(
+        rect.right,
+        rect.bottom - borderLength,
+      ) // Move to Right Bottom corner
       ..lineTo(rect.right, rect.bottom)
       ..lineTo(rect.right - borderLength, rect.bottom)
       ..lineTo(
-          rect.left + borderLength, rect.bottom) // Move to Left Bottom corner
+        rect.left + borderLength,
+        rect.bottom,
+      ) // Move to Left Bottom corner
       ..lineTo(rect.left, rect.bottom)
       ..lineTo(rect.left, rect.bottom - borderLength)
       ..lineTo(rect.left, rect.top + borderLength)
@@ -180,14 +173,15 @@ class QrScannerOverlayShape extends ShapeBorder {
 
     canvas
       ..drawPath(
-          Path.combine(
-            PathOperation.difference,
-            Path()..addRect(rect),
-            Path()
-              ..addRRect(
-                  RRect.fromRectAndRadius(cutOutRect, Radius.circular(borderRadius))),
+        Path.combine(
+          PathOperation.difference,
+          Path()..addRect(rect),
+          Path()..addRRect(
+            RRect.fromRectAndRadius(cutOutRect, Radius.circular(borderRadius)),
           ),
-          backgroundPaint)
+        ),
+        backgroundPaint,
+      )
       ..drawPath(getOuterPath(cutOutRect), borderPaint);
   }
 
