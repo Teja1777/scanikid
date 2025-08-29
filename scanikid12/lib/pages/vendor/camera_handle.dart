@@ -9,9 +9,9 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  // Controller for the mobile scanner
+  
   final MobileScannerController _scannerController = MobileScannerController(
-    // You can configure the scanner here
+    
     detectionSpeed: DetectionSpeed.normal,
     facing: CameraFacing.back,
   );
@@ -19,7 +19,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   void dispose() {
-    // Dispose the controller when the widget is removed from the tree
+    
     _scannerController.dispose();
     super.dispose();
   }
@@ -34,12 +34,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // Button to toggle the flashlight
+          
           IconButton(
             onPressed: () => _scannerController.toggleTorch(),
             icon: const Icon(Icons.flash_on),
           ),
-          // Button to switch between front and back cameras
+          
           IconButton(
             onPressed: () => _scannerController.switchCamera(),
             icon: const Icon(Icons.cameraswitch_outlined),
@@ -49,21 +49,21 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          // The main scanner view
+          
           MobileScanner(
             controller: _scannerController,
-            // This function is called when a barcode is detected
+            
             onDetect: (capture) {
-              // To prevent multiple scans, we check if a scan is already completed
+              
               if (!_isScanCompleted) {
                 _isScanCompleted = true;
                 final String code = capture.barcodes.first.rawValue ?? '---';
-                // Pop the screen and return the scanned value
+                
                 Navigator.pop(context, code);
               }
             },
           ),
-          // An overlay with a scanning window
+          
           Positioned.fill(
             child: Container(
               decoration: ShapeDecoration(
@@ -77,7 +77,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
             ),
           ),
-          // A label to guide the user
+          
           Positioned(
             bottom: 100,
             child: Container(
@@ -98,7 +98,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 }
 
-// This is a custom painter class to create the scanner overlay shape
+
 class QrScannerOverlayShape extends ShapeBorder {
   final Color borderColor;
   final double borderWidth;
@@ -134,19 +134,19 @@ class QrScannerOverlayShape extends ShapeBorder {
     }
 
     return getLeftTopPath(rect)
-      ..lineTo(rect.right - borderLength, rect.top) // Move to Right Top corner
+      ..lineTo(rect.right - borderLength, rect.top) 
       ..lineTo(rect.right, rect.top)
       ..lineTo(rect.right, rect.top + borderLength)
       ..lineTo(
         rect.right,
         rect.bottom - borderLength,
-      ) // Move to Right Bottom corner
+      ) 
       ..lineTo(rect.right, rect.bottom)
       ..lineTo(rect.right - borderLength, rect.bottom)
       ..lineTo(
         rect.left + borderLength,
         rect.bottom,
-      ) // Move to Left Bottom corner
+      ) 
       ..lineTo(rect.left, rect.bottom)
       ..lineTo(rect.left, rect.bottom - borderLength)
       ..lineTo(rect.left, rect.top + borderLength)

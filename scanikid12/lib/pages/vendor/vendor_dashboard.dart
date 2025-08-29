@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'camera_handle.dart'; // We will create this screen next
+import 'camera_handle.dart'; 
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -111,7 +111,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ## Header Section ##
+              
               const Text(
                 'Vendor Dashboard',
                 style: TextStyle(
@@ -130,7 +130,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               ),
               const SizedBox(height: 24),
 
-              // ## Tab Selection Section ##
+              
               Row(
                 children: List.generate(_tabs.length, (index) {
                   return Padding(
@@ -141,8 +141,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               ),
               const SizedBox(height: 32),
 
-              // ## Content Area ##
-              // This will show content based on the selected tab
+              
+              
               _buildTabContent(),
             ],
           ),
@@ -152,9 +152,9 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     );
   }
 
-  // Helper to build the content for the currently selected tab
+  
   Widget _buildTabContent() {
-    // We only have UI for the first tab in this example
+    
     if (_selectedTabIndex == 0) {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -190,7 +190,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
       );
     }
-    // Placeholder for the "My Sales" tab
+    
     return const Center(
       child: Text(
         'Sales information will be displayed here.',
@@ -199,7 +199,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     );
   }
 
-  // Helper to build the tab buttons
+  
   Widget _buildTabButton(int index) {
     bool isSelected = _selectedTabIndex == index;
     return GestureDetector(

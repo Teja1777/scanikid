@@ -42,10 +42,10 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
           password: _passwordController.text.trim(),
         );
 
-        // You can also update the user's profile with the name
+        
         await userCredential.user?.updateDisplayName(_nameController.text.trim());
 
-        // Create a document for the user in Firestore to store role and other details
+        
         await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
@@ -63,7 +63,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
       } else if (e.code == 'email-already-in-use') {
         message = 'The account already exists for that email.';
       } else {
-        // Log the specific error for debugging purposes.
+        
         if (kDebugMode) {
           print('Firebase Auth Error: ${e.code}');
         }

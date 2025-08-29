@@ -53,14 +53,14 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   final List<String> _tabs = ['Students', 'Purchases', 'Notifications'];
   
-  // Controllers for the text fields in the dialog
+  
   final TextEditingController _studentNameController = TextEditingController();
   final TextEditingController _studentIdController = TextEditingController();
 
-  // Function to show the "Add New Student" dialog
+  
   void _showAddStudentDialog() {
     showDialog(
-      context: context, // Use the State's context
+      context: context, 
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add New Student'),
@@ -83,7 +83,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
               child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
-                // Clear the text fields when the dialog is cancelled
+                
                 _studentNameController.clear();
                 _studentIdController.clear();
               },
@@ -108,13 +108,13 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                       .collection('students')
                       .add(newStudentData);
 
-                  // Prepare data for the QR code
+                  
                   final qrData = jsonEncode({
                     'parentId': _currentUser!.uid,
                     'studentDocId': studentDocRef.id,
                   });
                   
-                  // Also, store the generated QR data within the student's document
+                  
                   await studentDocRef.update({'qrData': qrData});
 
                   if (!mounted) return;
@@ -157,7 +157,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // If user is not logged in, show a fallback screen. This should not happen with correct routing.
+    
     if (_currentUser == null) {
       return const Scaffold(body: Center(child: Text('Error: User not found.')));
     }
@@ -239,7 +239,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
               }),
             ),
             const SizedBox(height: 20),
-            // This widget will now build the content based on the selected tab
+            
             _buildSelectedTabContent(),
           ],
         ),
@@ -247,7 +247,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-  /// Builds the content widget based on the currently selected tab index.
+  
   Widget _buildSelectedTabContent() {
     switch (_selectedTabIndex) {
       case 0:
@@ -257,7 +257,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
       case 2:
         return _buildNotificationsContent();
       default:
-        return _buildStudentsContent(); // Fallback to the first tab
+        return _buildStudentsContent(); 
     }
   }
   Widget _buildPurchasesContent() {
@@ -285,7 +285,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-  /// Placeholder widget for the "Notifications" tab.
+  
   Widget _buildNotificationsContent() {
     return const Center(
       child: Padding(
@@ -311,7 +311,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-  /// Builds the UI for the "Students" tab, including the list and add button.
+  
   Widget _buildStudentsContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,7 +349,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           ],
         ),
         const SizedBox(height: 24),
-        // Display the list of added students from Firestore
+        
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('users')
@@ -389,7 +389,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                 final studentName = studentData['name'] ?? 'No Name';
                 final studentRollNo = studentData['rollNo'] ?? 'No ID';
 
-                // Retrieve QR data from Firestore, or generate it if it doesn't exist for backward compatibility.
+                
                 final qrData = studentData['qrData'] as String? ?? jsonEncode({
                   'parentId': _currentUser!.uid,
                   'studentDocId': studentDoc.id,

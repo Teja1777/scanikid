@@ -139,7 +139,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                 ),
               ),
             ),
-          ], // Stack children
+          ], 
         ),
       ),
     );
