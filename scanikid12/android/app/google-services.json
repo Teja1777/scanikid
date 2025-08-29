@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "248733071874",
+    "project_id": "scanikid",
+    "storage_bucket": "scanikid.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:248733071874:android:249054b4d70eb797e6851b",
+        "android_client_info": {
+          "package_name": "com.example.scanikid12"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "248733071874-9gbem0gatjeien50b4bnqr0g0uqol4vc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqrU0Ru8ewAcX9TJYdPx-AfZS5olehMBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "248733071874-9gbem0gatjeien50b4bnqr0g0uqol4vc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "248733071874-o735n099ce9ldnvm80u077717n8uvs4k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scanikid12"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

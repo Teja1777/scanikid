@@ -35,8 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   qr_flutter: ^4.1.0
-  mobile_scanner: ^3.5.6
-
+  mobile_scanner: ^5.1.2 # Latest version
+  firebase_core: ^3.1.1 # Latest stable version
+  firebase_auth: ^5.1.1 # Latest stable version
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -61,11 +62,10 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
       - assets/img/kid2.png
-      - assets/img/kid0.png
-      - assets/img/vendor1.jpg
       - assets/img/kid.png
       - assets/img/vendor.jpg
-      - assets/img/vendor2.png
+      - assets/img/vendor3.png
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

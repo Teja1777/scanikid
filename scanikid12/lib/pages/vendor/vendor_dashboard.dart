@@ -105,6 +105,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ],
       ),
       body: SingleChildScrollView(
+      
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -147,6 +148,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           ),
         ),
       ),
+    
     );
   }
 
