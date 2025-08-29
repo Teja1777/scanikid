@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -9,11 +11,16 @@ class ParentDashboard extends StatefulWidget {
   State<ParentDashboard> createState() => _ParentDashboardScreenState();
 }
 
-// Dummy QRCodeScreen widget for demonstration
 class QRCodeScreen extends StatelessWidget {
-  final Map<String, String> studentDetails;
+  final String qrData;
+  final String studentName;
+  final String studentRollNo;
 
-  const QRCodeScreen({super.key, required this.studentDetails});
+  const QRCodeScreen(
+      {super.key,
+      required this.qrData,
+      required this.studentName,
+      required this.studentRollNo});
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +31,13 @@ class QRCodeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'QR Code for ${studentDetails['name']} (ID: ${studentDetails['id']})',
+              'QR Code for $studentName (ID: $studentRollNo)',
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             QrImageView(
-              data: jsonEncode(studentDetails),
+              data: qrData,
               version: QrVersions.auto,
               size: 200.0,
             ),
@@ -43,18 +50,17 @@ class QRCodeScreen extends StatelessWidget {
 
 class _ParentDashboardScreenState extends State<ParentDashboard> {
   int _selectedTabIndex = 0;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
   final List<String> _tabs = ['Students', 'Purchases', 'Notifications'];
-  final List<Map<String, String>> _students =
-      []; // List to hold student details
-
+  
   // Controllers for the text fields in the dialog
   final TextEditingController _studentNameController = TextEditingController();
   final TextEditingController _studentIdController = TextEditingController();
 
   // Function to show the "Add New Student" dialog
-  void _showAddStudentDialog(BuildContext context) {
+  void _showAddStudentDialog() {
     showDialog(
-      context: context,
+      context: context, // Use the State's context
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add New Student'),
@@ -84,30 +90,48 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             ),
             ElevatedButton(
               child: const Text('Add Student'),
-              onPressed: () {
+              onPressed: () async {
                 if (_studentNameController.text.isNotEmpty &&
                     _studentIdController.text.isNotEmpty) {
-                  final newStudent = {
-                    'name': _studentNameController.text,
-                    'id': _studentIdController.text,
+                  final studentName = _studentNameController.text;
+                  final studentRollNo = _studentIdController.text;
+
+                  final newStudentData = {
+                    'name': studentName,
+                    'rollNo': studentRollNo,
+                    'createdAt': FieldValue.serverTimestamp(),
                   };
-                  setState(() {
-                    _students.add(newStudent);
+                  
+                  final studentDocRef = await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(_currentUser!.uid)
+                      .collection('students')
+                      .add(newStudentData);
+
+                  // Prepare data for the QR code
+                  final qrData = jsonEncode({
+                    'parentId': _currentUser!.uid,
+                    'studentDocId': studentDocRef.id,
                   });
-                  Navigator.of(context).pop();
-                  // Clear the text fields after adding the student
+                  
+                  // Also, store the generated QR data within the student's document
+                  await studentDocRef.update({'qrData': qrData});
+
+                  if (!mounted) return;
+                  Navigator.of(context).pop(); 
                   _studentNameController.clear();
                   _studentIdController.clear();
-                  // For now, navigate to a placeholder QR code screen
                   Navigator.push(
-                    context,
+                    this.context, 
                     MaterialPageRoute(
-                      builder: (context) =>
-                          QRCodeScreen(studentDetails: newStudent),
+                      builder: (context) => QRCodeScreen(
+                          qrData: qrData,
+                          studentName: studentName,
+                          studentRollNo: studentRollNo),
                     ),
                   );
                 } else {
-                  // Optionally show an error message if fields are empty
+                  
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
@@ -124,8 +148,19 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // If user is not logged in, show a fallback screen. This should not happen with correct routing.
+    if (_currentUser == null) {
+      return const Scaffold(body: Center(child: Text('Error: User not found.')));
+    }
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -145,31 +180,33 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           ),
         ),
         actions: [
-          const CircleAvatar(
+          CircleAvatar(
             backgroundColor: Colors.deepPurple,
-            child: Text('P', style: TextStyle(color: Colors.white)),
+            child: Text(
+                _currentUser.displayName?.isNotEmpty == true
+                    ? _currentUser.displayName![0].toUpperCase()
+                    : 'P',
+                style: const TextStyle(color: Colors.white)),
           ),
           const SizedBox(width: 8),
-          const Center(
+          Center(
             child: Text(
-              'parent', 
-              style: TextStyle(color: Colors.black, fontSize: 16),
+              _currentUser.displayName ?? 'Parent',
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           const SizedBox(width: 8),
           Chip(
             label: const Text('parent'),
             labelStyle: const TextStyle(fontSize: 12),
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: Colors.grey[200],
             padding: EdgeInsets.zero,
             side: BorderSide.none,
           ),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.logout_outlined, color: Colors.black54),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home');
-            },
+            onPressed: _signOut,
           ),
           const SizedBox(width: 8),
         ],
@@ -196,7 +233,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             Row(
               children: List.generate(_tabs.length, (index) {
                 return Padding(
-                  padding: const EdgeInsets.only(right:1.0),
+                  padding: const EdgeInsets.only(right: 1.0),
                   child: _buildTabButton(index),
                 );
               }),
@@ -223,8 +260,6 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
         return _buildStudentsContent(); // Fallback to the first tab
     }
   }
-
-  /// Placeholder widget for the "Purchases" tab.
   Widget _buildPurchasesContent() {
     return const Center(
       child: Padding(
@@ -294,7 +329,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             ),
             ElevatedButton.icon(
               onPressed: () {
-                _showAddStudentDialog(context);
+                _showAddStudentDialog();
               },
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text('Add Student'),
@@ -314,56 +349,74 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           ],
         ),
         const SizedBox(height: 24),
-        // Display the list of added students
-        if (_students.isNotEmpty)
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _students.length,
-            itemBuilder: (context, index) {
-              final student = _students.elementAt(index);
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        student['name']!,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text('ID: ${student['id']!}'),
-                      // Placeholder for the QR code
-                      const SizedBox(height: 16),
-                      Center(
-                        child: QrImageView(
-                          data: jsonEncode(student),
-                          version: QrVersions.auto,
-                          size: 100.0,
-                        ),
-                      ),
-                    ],
-                  ),
+        // Display the list of added students from Firestore
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(_currentUser!.uid)
+              .collection('students')
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Container(
+                height: 100,
+                width: double.infinity,
+                alignment: Alignment.center,
+                child: const Text(
+                  'No students added yet. Click "+ Add Student" to begin.',
+                  style: TextStyle(color: Colors.grey),
+                  textAlign: TextAlign.center,
                 ),
               );
-            },
-          )
-        else
-          Container(
-            height: 100,
-            width: double.infinity,
-            alignment: Alignment.center,
-            child: const Text(
-              'No students added yet. Click "+ Add Student" to begin.',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Something went wrong.'));
+            }
+
+            final studentDocs = snapshot.data!.docs;
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: studentDocs.length,
+              itemBuilder: (context, index) {
+                final studentDoc = studentDocs[index];
+                final studentData = studentDoc.data() as Map<String, dynamic>;
+                final studentName = studentData['name'] ?? 'No Name';
+                final studentRollNo = studentData['rollNo'] ?? 'No ID';
+
+                // Retrieve QR data from Firestore, or generate it if it doesn't exist for backward compatibility.
+                final qrData = studentData['qrData'] as String? ?? jsonEncode({
+                  'parentId': _currentUser!.uid,
+                  'studentDocId': studentDoc.id,
+                });
+                
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(studentName,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text('ID: $studentRollNo'),
+                        const SizedBox(height: 16),
+                        Center(child: QrImageView(data: qrData, size: 100.0)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ],
     );
   }
