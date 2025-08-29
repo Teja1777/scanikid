@@ -29,7 +29,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     return Container(
      decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/img/vendor2.png'),
+          image: AssetImage('assets/img/vendor3.png'),
           fit: BoxFit.cover,
         ),
       ),
