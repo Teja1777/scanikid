@@ -6,8 +6,14 @@ import 'package:scanikid12/pages/parent/parent_dashboard.dart';
 import 'package:scanikid12/pages/vendor/vendor_login.dart';
 import 'package:scanikid12/pages/vendor/vendor_signup.dart';
 import 'package:scanikid12/pages/vendor/vendor_dashboard.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 

@@ -37,7 +37,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // Button to toggle the flashlight
           IconButton(
             onPressed: () => _scannerController.toggleTorch(),
-            icon: ValueListenableBuilder(
+            icon: ValueListenableBuilder<TorchState>(
               valueListenable: _scannerController.torchState,
               builder: (context, state, child) {
                 switch (state) {
@@ -93,7 +93,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                           child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: Colors.black.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
               child: const Text(
