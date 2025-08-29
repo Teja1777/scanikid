@@ -9,35 +9,35 @@ class VendorDashboard extends StatefulWidget {
 }
 
 class _VendorDashboardScreenState extends State<VendorDashboard> {
-  // State to keep track of the selected tab
+
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['QR Scanner', 'My Sales'];
 
-  // This will hold the data from the scanned QR code
-  String? _scannedStudentId; // Used in _showScanResultDialog
 
-  // Function to navigate to the scanner and receive the result
+  String? _scannedStudentId; 
+
+
   Future<void> _startScanner() async {
-    // Navigate to the QRScannerScreen and wait for a result
+
     final scannedValue = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const QRScannerScreen()),
     );
 
-    // If a value was returned (i.e., the user scanned something)
+    
     if (scannedValue != null) {
       setState(() {
         _scannedStudentId = scannedValue;
       });
-      // Show a confirmation dialog
+      
       _showScanResultDialog(scannedValue);
     }
   }
 
-  // Getter to access the scanned student ID
+  
   String? get scannedStudentId => _scannedStudentId;
 
-  // Show the result of the scan in a dialog
+  
   void _showScanResultDialog(String result) {
     showDialog(
       context: context,
