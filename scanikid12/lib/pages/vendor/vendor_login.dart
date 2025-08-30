@@ -76,12 +76,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
 
   @override
   Widget build(BuildContext context) {
- 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.1;
-
     return Scaffold(
-       
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -91,7 +86,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
           child: Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
                 child: Form(
                   key: _formKey,
                   child: Column(

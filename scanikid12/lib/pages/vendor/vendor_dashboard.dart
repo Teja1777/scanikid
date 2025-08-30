@@ -208,19 +208,19 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             ),
           ),
           const SizedBox(width: 8),
-          Center(
-            child: Text(
-              _currentUser?.displayName ?? 'Vendor',
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Chip(
-            label: const Text('vendor'),
-            labelStyle: const TextStyle(fontSize: 12),
-            backgroundColor: Colors.grey[200],
-            padding: EdgeInsets.zero,
-            side: BorderSide.none,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _currentUser?.displayName ?? 'Vendor',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Vendor Account',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
+              )
+            ],
           ),
           const SizedBox(width: 8),
           IconButton(

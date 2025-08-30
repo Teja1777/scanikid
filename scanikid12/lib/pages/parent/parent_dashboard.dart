@@ -27,6 +27,7 @@ class QRCodeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qrSize = MediaQuery.of(context).size.width * 0.6;
     return Scaffold(
       appBar: AppBar(title: const Text('Student QR Code')),
       body: Center(
@@ -39,7 +40,7 @@ class QRCodeScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            QrImageView(data: qrData, version: QrVersions.auto, size: 200.0),
+            QrImageView(data: qrData, version: QrVersions.auto, size: qrSize),
           ],
         ),
       ),
@@ -267,19 +268,19 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             ),
           ),
           const SizedBox(width: 8),
-          Center(
-            child: Text(
-              _currentUser.displayName ?? 'Parent',
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Chip(
-            label: const Text('parent'),
-            labelStyle: const TextStyle(fontSize: 12),
-            backgroundColor: Colors.grey[200],
-            padding: EdgeInsets.zero,
-            side: BorderSide.none,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _currentUser.displayName ?? 'Parent',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Parent Account',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
+              )
+            ],
           ),
           const SizedBox(width: 8),
           IconButton(
