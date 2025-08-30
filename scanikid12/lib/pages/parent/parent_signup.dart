@@ -234,7 +234,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                             'Already have an account?',
                             style: TextStyle(
                               color: Colors.black54,
-                              fontSize: 18,
+                              fontSize: 16,
                             ),
                           ),
                           TextButton(
@@ -247,7 +247,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 20,
+                                fontSize:18 ,
                               ),
                             ),
                           ),
