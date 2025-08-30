@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'camera_handle.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:scanikid12/pages/vendor/vendor_sales_page.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -13,8 +14,6 @@ class VendorDashboard extends StatefulWidget {
 
 class _VendorDashboardScreenState extends State<VendorDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
-  int _selectedTabIndex = 0;
-  final List<String> _tabs = ['QR Scanner', 'My Sales'];
 
   
   String? _scannedParentId;
@@ -257,17 +256,11 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               ),
               const SizedBox(height: 24),
 
-              Row(
-                children: List.generate(_tabs.length, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: _buildTabButton(index),
-                  );
-                }),
-              ),
+              _buildNavigationControls(),
               const SizedBox(height: 32),
 
-              _buildTabContent(),
+              // The content is now always the QR Scanner flow
+              _buildScannerContent(),
             ],
           ),
         ),
@@ -275,48 +268,51 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     );
   }
 
-  Widget _buildTabContent() {
-    if (_selectedTabIndex == 0) {
-      if (_isProcessingScan) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (_scannedStudentName != null) {
-        return _buildReceiptCreationUI();
-      }
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+  Widget _buildNavigationControls() {
+    return Row(
+      children: [
+        _buildNavigationButton(
+          label: 'My Sales',
+          icon: Icons.point_of_sale_outlined,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const VendorSalesPage()),
+            );
+          },
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Scan Student QR Code',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _startScanner,
-              icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-              label: const Text('Start QR Scanner'),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: () {},
-              child: const Text('Enter Student ID Manually'),
-            ),
-          ],
-        ),
-      );
-    }
+      ],
+    );
+  }
 
-    return const Center(
-      child: Text(
-        'Sales information will be displayed here.',
-        style: TextStyle(color: Colors.grey),
+  Widget _buildScannerContent() {
+    if (_isProcessingScan) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_scannedStudentName != null) {
+      return _buildReceiptCreationUI();
+    }
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Scan Student QR Code',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _startScanner,
+            icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+            label: const Text('Start QR Scanner'),
+          ),
+        ],
       ),
     );
   }
@@ -462,27 +458,35 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     );
   }
 
-  Widget _buildTabButton(int index) {
-    bool isSelected = _selectedTabIndex == index;
+  Widget _buildNavigationButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    Widget buttonContent = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: const Color(0xFF6366F1), size: 20),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF6366F1),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTabIndex = index;
-        });
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.grey[200] : Colors.transparent,
+          color: const Color(0xFF6366F1).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
-          _tabs[index],
-          style: TextStyle(
-            color: isSelected ? Colors.black : Colors.grey[600],
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
+        child: buttonContent,
       ),
     );
   }
