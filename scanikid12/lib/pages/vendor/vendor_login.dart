@@ -91,8 +91,14 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    
                     children: [
+                      Image.asset(
+                        'assets/img/logo.png',
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 24),
                       const Text(
                         'Vendor Login',
                         textAlign: TextAlign.center,
@@ -156,6 +162,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                fixedSize: const Size(345, 55),
                               ),
                               child: const Text(
                                 'Sign In',

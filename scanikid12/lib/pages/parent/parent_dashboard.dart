@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 
+
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
 
@@ -40,7 +41,11 @@ class QRCodeScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            QrImageView(data: qrData, version: QrVersions.auto, size: qrSize),
+            QrImageView(
+              data: qrData,
+              version: QrVersions.auto,
+              size: qrSize,
+            ),
           ],
         ),
       ),

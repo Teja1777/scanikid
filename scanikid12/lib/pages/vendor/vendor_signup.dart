@@ -101,12 +101,21 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Image.asset(
+                    'assets/img/logo.png',
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 24),
                   const Text(
                     'Create Account',
                     textAlign: TextAlign.center,
@@ -208,6 +217,7 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                            fixedSize: const Size(345, 55),
                           ),
                           child: const Text(
                             'Sign Up',
@@ -221,11 +231,10 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Already have an account?",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          )),
+                      const Text(
+                        "Already have an account?",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacementNamed(

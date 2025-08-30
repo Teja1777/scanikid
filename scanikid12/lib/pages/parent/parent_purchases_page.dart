@@ -36,7 +36,6 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
 
   @override
   Widget build(BuildContext context) {
-    
     debugPrint("--- ParentPurchasesPage build ---");
     return Scaffold(
       appBar: AppBar(
@@ -51,7 +50,9 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
 
   Widget _buildPurchasesContent() {
     if (_currentUser == null) {
-      return const Center(child: Text('You must be logged in to see purchases.'));
+      return const Center(
+        child: Text('You must be logged in to see purchases.'),
+      );
     }
     return StreamBuilder<QuerySnapshot>(
       stream: _purchasesStream,
@@ -59,7 +60,7 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
         if (snapshot.hasError) {
           debugPrint("Firestore Error: ${snapshot.error}");
           String errorMessage = 'An error occurred while fetching purchases.';
-          
+
           if (snapshot.error.toString().contains('FAILED_PRECONDITION')) {
             errorMessage =
                 'Database setup required. Please check the debug console for a link to create the necessary Firestore index.';
@@ -128,8 +129,8 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
             final data = doc.data() as Map<String, dynamic>;
             final isPaying = _processingPaymentId == doc.id;
             final isPaid = data['status'] == 'paid';
-            final items =
-                (data['items'] as List<dynamic>).cast<Map<String, dynamic>>();
+            final items = (data['items'] as List<dynamic>)
+                .cast<Map<String, dynamic>>();
             final timestamp = data['createdAt'] as Timestamp?;
             final date = timestamp != null
                 ? DateFormat('d MMM yyyy, h:mm a').format(timestamp.toDate())
@@ -151,47 +152,66 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
                     Text(
                       '₹${(data['totalAmount'] as num).toStringAsFixed(2)}',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     if (isPaid)
                       const Chip(
                         label: Text('Paid'),
                         backgroundColor: Colors.green,
                         padding: EdgeInsets.zero,
-                        labelStyle: TextStyle(color: Colors.white, fontSize: 10),
-                        visualDensity:
-                            VisualDensity(horizontal: 0.0, vertical: -4),
+                        labelStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                        visualDensity: VisualDensity(
+                          horizontal: 0.0,
+                          vertical: -4,
+                        ),
                       )
                     else
                       Text(
                         date,
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
                       ),
                   ],
                 ),
                 children: [
                   const Divider(height: 1),
-                  ...items.map((item) => ListTile(
-                        title: Text(item['name']),
-                        trailing: Text(
-                            '₹${(item['price'] as num).toStringAsFixed(2)}'),
-                      )),
+                  ...items.map(
+                    (item) => ListTile(
+                      title: Text(item['name']),
+                      trailing: Text(
+                        '₹${(item['price'] as num).toStringAsFixed(2)}',
+                      ),
+                    ),
+                  ),
                   if (isPaid)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_outline,
-                              color: Colors.green, size: 20),
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Payment Completed',
                             style: TextStyle(
-                                color: Colors.green, fontWeight: FontWeight.bold),
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
-                      )),
+                      ),
+                    ),
                   if (!isPaid)
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -204,7 +224,8 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
                                   builder: (context) => AlertDialog(
                                     title: const Text('Confirm Mock Payment'),
                                     content: const Text(
-                                        'This will mark the purchase as paid. Proceed?'),
+                                      'This will mark the purchase as paid. Proceed?',
+                                    ),
                                     actions: [
                                       TextButton(
                                         onPressed: () =>
@@ -228,7 +249,8 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
 
                                 try {
                                   await Future.delayed(
-                                      const Duration(seconds: 2));
+                                    const Duration(seconds: 2),
+                                  );
 
                                   await FirebaseFirestore.instance
                                       .collection('purchases')
@@ -238,7 +260,8 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
                                   if (mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                          content: Text('Payment failed: $e')),
+                                        content: Text('Payment failed: $e'),
+                                      ),
                                     );
                                   }
                                 } finally {
@@ -258,9 +281,14 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : const Text('Pay Now',
-                                style: TextStyle(color: Colors.white)),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Pay Now',
+                                style: TextStyle(color: Colors.white),
+                              ),
                       ),
                     ),
                 ],

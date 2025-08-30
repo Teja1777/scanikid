@@ -19,7 +19,6 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
     super.initState();
     _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser != null) {
-  
       _salesStream = FirebaseFirestore.instance
           .collection('purchases')
           .where('vendorId', isEqualTo: _currentUser!.uid)
@@ -51,7 +50,7 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
         if (snapshot.hasError) {
           debugPrint("Firestore Error: ${snapshot.error}");
           String errorMessage = 'An error occurred while fetching sales.';
-          
+
           if (snapshot.error.toString().contains('FAILED_PRECONDITION')) {
             errorMessage =
                 'Database setup required. Please check the debug console for a link to create the necessary Firestore index.';
@@ -119,7 +118,8 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
             final doc = salesDocs[index];
             final data = doc.data() as Map<String, dynamic>;
             final isPaid = data['status'] == 'paid';
-            final items = (data['items'] as List<dynamic>).cast<Map<String, dynamic>>();
+            final items = (data['items'] as List<dynamic>)
+                .cast<Map<String, dynamic>>();
             final timestamp = data['createdAt'] as Timestamp?;
             final date = timestamp != null
                 ? DateFormat('d MMM yyyy, h:mm a').format(timestamp.toDate())
@@ -129,9 +129,7 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: ExpansionTile(
                 title: Text(
-                  'Student: ${data['studentName'] ?? 'N/A'
-                  } (ID: ${data['studentRollNo'] ?? 'N/A'
-                  }',
+                  'Student: ${data['studentName'] ?? 'N/A'} (ID: ${data['studentRollNo'] ?? 'N/A'}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(date),
@@ -142,28 +140,41 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
                     Text(
                       '₹${(data['totalAmount'] as num).toStringAsFixed(2)}',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     Chip(
                       label: Text(isPaid ? 'Paid' : 'Pending'),
-                      backgroundColor: isPaid ? Colors.green.shade100 : Colors.orange.shade100,
+                      backgroundColor: isPaid
+                          ? Colors.green.shade100
+                          : Colors.orange.shade100,
                       labelStyle: TextStyle(
-                        color: isPaid ? Colors.green.shade800 : Colors.orange.shade800,
+                        color: isPaid
+                            ? Colors.green.shade800
+                            : Colors.orange.shade800,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
                       padding: EdgeInsets.zero,
-                      visualDensity: const VisualDensity(horizontal: 0.0, vertical: -4),
+                      visualDensity: const VisualDensity(
+                        horizontal: 0.0,
+                        vertical: -4,
+                      ),
                     ),
                   ],
                 ),
                 children: [
                   const Divider(height: 1),
-                  ...items.map((item) => ListTile(
-                        dense: true,
-                        title: Text(item['name']),
-                        trailing: Text('₹${(item['price'] as num).toStringAsFixed(2)}'),
-                      )),
+                  ...items.map(
+                    (item) => ListTile(
+                      dense: true,
+                      title: Text(item['name']),
+                      trailing: Text(
+                        '₹${(item['price'] as num).toStringAsFixed(2)}',
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
