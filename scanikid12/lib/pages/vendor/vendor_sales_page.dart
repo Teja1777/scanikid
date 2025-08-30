@@ -51,7 +51,7 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
         if (snapshot.hasError) {
           debugPrint("Firestore Error: ${snapshot.error}");
           String errorMessage = 'An error occurred while fetching sales.';
-          // Check if the error is the specific one about a missing index.
+          
           if (snapshot.error.toString().contains('FAILED_PRECONDITION')) {
             errorMessage =
                 'Database setup required. Please check the debug console for a link to create the necessary Firestore index.';

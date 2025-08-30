@@ -259,7 +259,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               _buildNavigationControls(),
               const SizedBox(height: 32),
 
-              // The content is now always the QR Scanner flow
+              
               _buildScannerContent(),
             ],
           ),

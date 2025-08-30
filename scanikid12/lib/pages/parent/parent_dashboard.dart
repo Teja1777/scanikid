@@ -67,9 +67,9 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
         .collection('purchases')
         .where('parentId', isEqualTo: _currentUser!.uid)
         .where('status', isEqualTo: 'unpaid')
-        // NOTE: This query requires a composite index in Firestore.
-        // If you see a "FAILED_PRECONDITION" error, use the link from
-        // the debug console to create the index.
+        
+        
+        
         .snapshots();
   }
   void _showAddStudentDialog() {
@@ -140,26 +140,21 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               'rollNo': studentRollNo,
                               'createdAt': FieldValue.serverTimestamp(),
                             };
-
                             final studentDocRef = await FirebaseFirestore
                                 .instance
                                 .collection('users')
                                 .doc(_currentUser!.uid)
                                 .collection('students')
                                 .add(newStudentData);
-
                             final qrData = jsonEncode({
                               'parentId': _currentUser.uid,
                               'studentDocId': studentDocRef.id,
                             });
-
                             await studentDocRef.update({'qrData': qrData});
-
                             if (!mounted) return;
                             Navigator.of(dialogContext).pop();
                             _studentNameController.clear();
                             _studentIdController.clear();
-
                             Navigator.push(
                               this.context,
                               MaterialPageRoute(
@@ -171,7 +166,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               ),
                             );
                           } on FirebaseException catch (e) {
-                            // This will catch specific Firebase errors, like permission denied.
+                            
                             debugPrint("Firebase Error: ${e.message} (Code: ${e.code})");
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
@@ -186,7 +181,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               });
                             }
                           } catch (e) {
-                            // This will catch any other unexpected errors.
+                            
                             debugPrint("Unexpected Error: $e");
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
@@ -231,7 +226,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
-      // This is an edge case, but good to have.
+      
       debugPrint('--- BUILD: Current user is null! ---');
       return const Scaffold(
         body: Center(child: Text('Error: User not found.')),

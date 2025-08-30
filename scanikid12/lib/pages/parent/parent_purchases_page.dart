@@ -36,7 +36,7 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // This will help see if unexpected rebuilds are happening.
+    
     debugPrint("--- ParentPurchasesPage build ---");
     return Scaffold(
       appBar: AppBar(
@@ -59,7 +59,7 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
         if (snapshot.hasError) {
           debugPrint("Firestore Error: ${snapshot.error}");
           String errorMessage = 'An error occurred while fetching purchases.';
-          // Check if the error is the specific one about a missing index.
+          
           if (snapshot.error.toString().contains('FAILED_PRECONDITION')) {
             errorMessage =
                 'Database setup required. Please check the debug console for a link to create the necessary Firestore index.';

@@ -76,7 +76,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Use screen width for responsive padding
+    
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = screenWidth * 0.1;
 
