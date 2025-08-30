@@ -39,12 +39,17 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             onPressed: () => _scannerController.toggleTorch(),
             icon: ValueListenableBuilder<TorchState>(
               valueListenable: _scannerController.torchState,
-              builder: (context, state, child) {
+              builder: (BuildContext context, TorchState state, Widget? child) {
                 switch (state) {
                   case TorchState.off:
                     return const Icon(Icons.flash_off, color: Colors.grey);
                   case TorchState.on:
                     return const Icon(Icons.flash_on, color: Colors.yellow);
+                  case TorchState.auto:
+                    return const Icon(Icons.flash_auto, color: Colors.yellow);
+                  case TorchState.unavailable:
+                    // When the torch is not available, show it as off.
+                    return const Icon(Icons.flash_off, color: Colors.grey);
                 }
               },
             ),
@@ -90,12 +95,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // A label to guide the user
           Positioned(
             bottom: 100,
-                          child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color.fromRGBO(0, 0, 0, 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: const Text(
                 'Place QR code in the frame to scan',
                 style: TextStyle(color: Colors.white),
