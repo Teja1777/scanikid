@@ -76,53 +76,47 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    const darkBoldTextStyle = TextStyle(
-      color: Color(0xFF040C13),
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-    );
+ 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth * 0.1;
 
-    return Container(
-     decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/img/vendor3.png'),
-          fit: BoxFit.cover,
+    return Scaffold(
+       
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: const BackButton(color: Colors.black),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.only(top: 100, left: 100, right: 50),
-              child: const Text(
-                'Welcome to Vendor Login',
-                style: TextStyle(
-                  fontSize: 27,
-                  color: Color.fromARGB(255, 2, 3, 2),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * 0.5,
-                  left: 50,
-                  right: 50,
-                ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const Text(
+                        'Vendor Login',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Email',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Business Email',
+                          hintText: 'you@business.com',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -143,8 +137,8 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Password',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Password',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -154,51 +148,49 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 130),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              color: Color(0xFF01060A),
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          _isLoading
-                              ? const CircularProgressIndicator()
-                              : CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: const Color(0xFF01060A),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.arrow_forward_ios,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: _signIn,
-                                  ),
-                                ),
-                        ],
-                      ),
                       const SizedBox(height: 40),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: _signIn,
+                              style: ElevatedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                backgroundColor: const Color(0xFF01060A),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                      const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const Text("Don't have an account?",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              )),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/vendor_signup');
+                              Navigator.pushReplacementNamed(
+                                  context, '/vendor_signup');
                             },
                             child: const Text(
-                              'Sign Up?',
-                              style: darkBoldTextStyle,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              'Forgot Password',
-                              style: darkBoldTextStyle,
+                              'Sign Up',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                              ),
                             ),
                           ),
                         ],
@@ -208,9 +200,9 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                 ),
               ),
             ),
-          ], 
+          ),
         ),
-      ),
-    );
+      );
+    
   }
 }

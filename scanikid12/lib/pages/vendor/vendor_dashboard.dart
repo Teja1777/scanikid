@@ -124,7 +124,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     try {
       final purchaseData = {
         'vendorId': _currentUser!.uid,
-        'vendorName': _currentUser!.displayName ?? 'N/A',
+        'vendorName': _currentUser.displayName ?? 'N/A',
         'parentId': _scannedParentId,
         'studentDocId': _scannedStudentDocId,
         'studentName': _scannedStudentName,

@@ -19,9 +19,7 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
     super.initState();
     _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser != null) {
-      // NOTE: This query requires a composite index in Firestore.
-      // If you see a "FAILED_PRECONDITION" error, use the link from
-      // the debug console to create the index.
+  
       _salesStream = FirebaseFirestore.instance
           .collection('purchases')
           .where('vendorId', isEqualTo: _currentUser!.uid)

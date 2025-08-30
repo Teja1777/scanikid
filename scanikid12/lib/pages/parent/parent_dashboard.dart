@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 
 class ParentDashboard extends StatefulWidget {
@@ -148,7 +148,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                                 .add(newStudentData);
 
                             final qrData = jsonEncode({
-                              'parentId': _currentUser!.uid,
+                              'parentId': _currentUser.uid,
                               'studentDocId': studentDocRef.id,
                             });
 
@@ -508,7 +508,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                 final qrData =
                     studentData['qrData'] as String? ??
                     jsonEncode({
-                      'parentId': _currentUser!.uid,
+                      'parentId': _currentUser.uid,
                       'studentDocId': studentDoc.id,
                     });
 

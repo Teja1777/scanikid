@@ -18,8 +18,6 @@ class _ParentPurchasesPageState extends State<ParentPurchasesPage> {
   @override
   void initState() {
     super.initState();
-    debugPrint("--- ParentPurchasesPage initState ---");
-    // It's safer to get the current user inside initState.
     _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser != null) {
       _purchasesStream = FirebaseFirestore.instance

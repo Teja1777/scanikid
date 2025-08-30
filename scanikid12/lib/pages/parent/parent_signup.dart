@@ -92,48 +92,46 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/img/kid2.png'),
-          fit: BoxFit.cover,
+ 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth * 0.1;
+
+    return  Scaffold(
+  
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: const BackButton(color: Colors.black),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-        body: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.only(top: 100, left: 50, right: 50),
-              child: const Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Color(0xFF79BB74),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * 0.2,
-                  left: 50,
-                  right: 50,
-                ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const Text(
+                        'Create Parent Account',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32,
+                          color: Color(0xFF4C9A48),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Full Name',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Full Name',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -150,8 +148,9 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Email',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Email',
+                          hintText: 'you@example.com',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -172,8 +171,8 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Password',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Password',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -194,8 +193,8 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          hintText: 'Confirm Password',
-                          fillColor: Colors.grey[100],
+                          labelText: 'Confirm Password',
+                          fillColor: Colors.white.withOpacity(0.8),
                           filled: true,
                         ),
                         validator: (value) {
@@ -206,54 +205,62 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                         },
                       ),
                       const SizedBox(height: 40),
-                      Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            color: Color(0xFF01060A),
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          
-                        ),
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : CircleAvatar(
-                                radius: 20,
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: _signUp,
+                              style: ElevatedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 backgroundColor: const Color(0xFF01060A),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: _signUp,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                      ],
-                    ),
-                      const SizedBox(height: 40),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/parent_login');
-                        },
-                        child: const Text(
-                          'Already have an account? Sign In',
-                          style: TextStyle(
-                            color: Color(0xFF01060A),
-                            fontSize: 18,
+                              child: const Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Already have an account?',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 18,
+                            ),
                           ),
-                        ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(
+                                  context, '/parent_login');
+                            },
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      
     );
   }
 }
