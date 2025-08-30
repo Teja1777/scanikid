@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'camera_handle.dart'; // We will create this screen next
+import 'camera_handle.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -9,49 +12,170 @@ class VendorDashboard extends StatefulWidget {
 }
 
 class _VendorDashboardScreenState extends State<VendorDashboard> {
-  // State to keep track of the selected tab
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['QR Scanner', 'My Sales'];
 
-  // This will hold the data from the scanned QR code
-  String? _scannedStudentId; // Used in _showScanResultDialog
+  
+  String? _scannedParentId;
+  String? _scannedStudentDocId;
+  String? _scannedStudentName;
+  String? _scannedStudentRollNo;
+  bool _isProcessingScan = false;
 
-  // Function to navigate to the scanner and receive the result
+  
+  final List<PurchaseItem> _purchaseItems = [];
+  final _itemNameController = TextEditingController();
+  final _itemPriceController = TextEditingController();
+  double _totalAmount = 0.0;
+  bool _isSendingReceipt = false;
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    _itemPriceController.dispose();
+    super.dispose();
+  }
+
   Future<void> _startScanner() async {
-    // Navigate to the QRScannerScreen and wait for a result
+    
+    _resetScan();
+
     final scannedValue = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const QRScannerScreen()),
     );
 
-    // If a value was returned (i.e., the user scanned something)
-    if (scannedValue != null) {
+    if (scannedValue == null || scannedValue.isEmpty) return;
+
+    setState(() {
+      _isProcessingScan = true;
+    });
+
+    try {
+      final Map<String, dynamic> qrData = jsonDecode(scannedValue);
+      final parentId = qrData['parentId'] as String?;
+      final studentDocId = qrData['studentDocId'] as String?;
+
+      if (parentId == null || studentDocId == null) {
+        throw Exception('Invalid QR code format.');
+      }
+
+      final studentDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(parentId)
+          .collection('students')
+          .doc(studentDocId)
+          .get();
+
+      if (!studentDoc.exists) {
+        throw Exception('Student not found in the database.');
+      }
+
+      final studentData = studentDoc.data()!;
       setState(() {
-        _scannedStudentId = scannedValue;
+        _scannedParentId = parentId;
+        _scannedStudentDocId = studentDocId;
+        _scannedStudentName = studentData['name'] as String?;
+        _scannedStudentRollNo = studentData['rollNo'] as String?;
       });
-      // Show a confirmation dialog
-      _showScanResultDialog(scannedValue);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
+      }
+      _resetScan();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingScan = false;
+        });
+      }
     }
   }
 
-  // Getter to access the scanned student ID
-  String? get scannedStudentId => _scannedStudentId;
+  void _addItem() {
+    final name = _itemNameController.text;
+    final price = double.tryParse(_itemPriceController.text);
 
-  // Show the result of the scan in a dialog
-  void _showScanResultDialog(String result) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Scan Successful"),
-        content: Text("Student ID: $result"),
-        actions: [
-          TextButton(
-            child: const Text("OK"),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
+    if (name.isNotEmpty && price != null && price > 0) {
+      setState(() {
+        _purchaseItems.add(PurchaseItem(name: name, price: price));
+        _totalAmount += price;
+      });
+      _itemNameController.clear();
+      _itemPriceController.clear();
+      FocusScope.of(context).unfocus(); 
+    }
+  }
+
+  Future<void> _sendReceipt() async {
+    if (_purchaseItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one item.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSendingReceipt = true;
+    });
+
+    try {
+      final purchaseData = {
+        'vendorId': _currentUser!.uid,
+        'vendorName': _currentUser!.displayName ?? 'N/A',
+        'parentId': _scannedParentId,
+        'studentDocId': _scannedStudentDocId,
+        'studentName': _scannedStudentName,
+        'studentRollNo': _scannedStudentRollNo,
+        'items': _purchaseItems.map((item) => item.toMap()).toList(),
+        'totalAmount': _totalAmount,
+        'status': 'unpaid', 
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      
+      await FirebaseFirestore.instance
+          .collection('purchases')
+          .add(purchaseData);
+
+      
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt sent successfully!')),
+      );
+
+      
+      _resetScan();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send receipt: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSendingReceipt = false;
+        });
+      }
+    }
+  }
+
+  void _resetScan() {
+    setState(() {
+      _scannedParentId = null;
+      _scannedStudentDocId = null;
+      _scannedStudentName = null;
+      _scannedStudentRollNo = null;
+      _purchaseItems.clear();
+      _totalAmount = 0.0;
+      _itemNameController.clear();
+      _itemPriceController.clear();
+      _isSendingReceipt = false;
+    });
   }
 
   @override
@@ -75,15 +199,20 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           ),
         ),
         actions: [
-          const CircleAvatar(
+          CircleAvatar(
             backgroundColor: Color(0xFF6366F1),
-            child: Text('V', style: TextStyle(color: Colors.white)),
+            child: Text(
+              _currentUser?.displayName?.isNotEmpty == true
+                  ? _currentUser!.displayName![0].toUpperCase()
+                  : 'V',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
           const SizedBox(width: 8),
-          const Center(
+          Center(
             child: Text(
-              'vendor',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+              _currentUser?.displayName ?? 'Vendor',
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           const SizedBox(width: 8),
@@ -97,21 +226,22 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.logout_outlined, color: Colors.black54),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home');
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/home');
+              }
             },
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
-      
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ## Header Section ##
               const Text(
                 'Vendor Dashboard',
                 style: TextStyle(
@@ -123,14 +253,10 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               const SizedBox(height: 8),
               const Text(
                 'Scan student QR codes and create purchase requests',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 24),
 
-              // ## Tab Selection Section ##
               Row(
                 children: List.generate(_tabs.length, (index) {
                   return Padding(
@@ -141,21 +267,22 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               ),
               const SizedBox(height: 32),
 
-              // ## Content Area ##
-              // This will show content based on the selected tab
               _buildTabContent(),
             ],
           ),
         ),
       ),
-    
     );
   }
 
-  // Helper to build the content for the currently selected tab
   Widget _buildTabContent() {
-    // We only have UI for the first tab in this example
     if (_selectedTabIndex == 0) {
+      if (_isProcessingScan) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (_scannedStudentName != null) {
+        return _buildReceiptCreationUI();
+      }
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -168,10 +295,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           children: [
             const Text(
               'Scan Student QR Code',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -181,16 +305,14 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             ),
             const SizedBox(height: 16),
             OutlinedButton(
-              onPressed: () {
-          
-              },
+              onPressed: () {},
               child: const Text('Enter Student ID Manually'),
             ),
           ],
         ),
       );
     }
-    // Placeholder for the "My Sales" tab
+
     return const Center(
       child: Text(
         'Sales information will be displayed here.',
@@ -199,7 +321,147 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     );
   }
 
-  // Helper to build the tab buttons
+  Widget _buildReceiptCreationUI() {
+    return Column(
+      children: [
+        
+        Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Student Details',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.person, color: Color(0xFF6366F1)),
+                  title: Text(
+                    _scannedStudentName ?? 'N/A',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text('ID: ${_scannedStudentRollNo ?? 'N/A'}'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _itemNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Item Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _itemPriceController,
+                decoration: const InputDecoration(
+                  labelText: 'Price',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: Color(0xFF6366F1)),
+              onPressed: _addItem,
+              iconSize: 36,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _purchaseItems.length,
+          itemBuilder: (context, index) {
+            final item = _purchaseItems[index];
+            return ListTile(
+              title: Text(item.name),
+              trailing: Text('₹${item.price.toStringAsFixed(2)}'),
+            );
+          },
+        ),
+        const Divider(),
+
+        
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '₹${_totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _resetScan,
+                child: const Text('Cancel'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isSendingReceipt ? null : _sendReceipt,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                ),
+                child: _isSendingReceipt
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Send Receipt',
+                        style: TextStyle(color: Colors.white),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTabButton(int index) {
     bool isSelected = _selectedTabIndex == index;
     return GestureDetector(
@@ -224,4 +486,13 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       ),
     );
   }
+}
+
+class PurchaseItem {
+  final String name;
+  final double price;
+
+  PurchaseItem({required this.name, required this.price});
+
+  Map<String, dynamic> toMap() => {'name': name, 'price': price};
 }
