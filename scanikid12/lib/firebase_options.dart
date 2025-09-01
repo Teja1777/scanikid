@@ -65,7 +65,6 @@ class DefaultFirebaseOptions {
     iosClientId: '248733071874-o735n099ce9ldnvm80u077717n8uvs4k.apps.googleusercontent.com',
     iosBundleId: 'com.example.scanikid12',
   );
-
   static final FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDKFJM9fKCKv_61YWTxZskOWurrdobH_zs',
     appId: '1:248733071874:ios:41ccff975a9a6181e6851b',

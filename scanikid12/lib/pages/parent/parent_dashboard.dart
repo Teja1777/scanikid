@@ -17,7 +17,7 @@ class QRCodeScreen extends StatelessWidget {
   final String qrData;
   final String studentName;
   final String studentRollNo;
-
+//ok ok
   const QRCodeScreen({
     super.key,
     required this.qrData,
