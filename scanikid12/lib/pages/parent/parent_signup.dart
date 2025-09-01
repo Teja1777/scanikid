@@ -128,7 +128,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             labelText: 'Full Name',
-                            fillColor: Colors.white.withOpacity(0.8),
+                            fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
                             filled: true,
                           ),
                           validator: (value) {
@@ -147,7 +147,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                             ),
                             labelText: 'Email',
                             hintText: 'you@example.com',
-                            fillColor: Colors.white.withOpacity(0.8),
+                            fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
                             filled: true,
                           ),
                           validator: (value) {
@@ -169,7 +169,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             labelText: 'Password',
-                            fillColor: Colors.white.withOpacity(0.8),
+                            fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
                             filled: true,
                           ),
                           validator: (value) {
@@ -191,7 +191,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             labelText: 'Confirm Password',
-                            fillColor: Colors.white.withOpacity(0.8),
+                            fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
                             filled: true,
                           ),
                           validator: (value) {

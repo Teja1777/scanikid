@@ -80,11 +80,9 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         _scannedStudentRollNo = studentData['rollNo'] as String?;
       });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
       _resetScan();
     } finally {
       if (mounted) {
@@ -150,11 +148,10 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       
       _resetScan();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send receipt: ${e.toString()}')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send receipt: ${e.toString()}')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -483,7 +480,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF6366F1).withOpacity(0.1),
+          color: const Color.fromRGBO(99, 102, 241, 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: buttonContent,

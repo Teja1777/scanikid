@@ -150,6 +150,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               'studentDocId': studentDocRef.id,
                             });
                             await studentDocRef.update({'qrData': qrData});
+
                             if (!mounted) return;
                             Navigator.of(dialogContext).pop();
                             _studentNameController.clear();
@@ -429,7 +430,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.deepPurple.withOpacity(0.1),
+          color: const Color.fromRGBO(103, 58, 183, 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: (notificationCount > 0)
