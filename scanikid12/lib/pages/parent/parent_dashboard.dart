@@ -12,7 +12,6 @@ class ParentDashboard extends StatefulWidget {
   @override
   State<ParentDashboard> createState() => _ParentDashboardScreenState();
 }
-
 class QRCodeScreen extends StatelessWidget {
   final String qrData;
   final String studentName;
