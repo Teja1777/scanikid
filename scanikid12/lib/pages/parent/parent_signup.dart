@@ -28,13 +28,16 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
   }
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     setState(() {
       _isLoading = true;
     });
+
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -53,9 +56,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/parent_login');
-      }
+      navigator.pushReplacementNamed('/parent_login');
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'weak-password') {
@@ -69,23 +70,17 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
         }
         message = 'An error occurred. Please try again.';
       }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      }
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('An unexpected error occurred.')),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
-        );
+        setState(() {
+          _isLoading = false;
+        });
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 

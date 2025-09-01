@@ -23,7 +23,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -31,15 +31,16 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
       _isLoading = true;
     });
 
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/parent_dashboard');
-      }
+      navigator.pushReplacementNamed('/parent_dashboard');
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'user-not-found') {
@@ -54,23 +55,17 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         }
         message = 'An error occurred. Please try again.';
       }
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-      }
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('An unexpected error occurred.')),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
-        );
+        setState(() {
+          _isLoading = false;
+        });
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
