@@ -56,7 +56,7 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-      navigator.pushReplacementNamed('/parent_login');
+      navigator.pushReplacementNamed('/parent_dashboard');
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'weak-password') {
@@ -83,7 +83,6 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class ParentLoginPage extends StatefulWidget {
   const ParentLoginPage({super.key});
@@ -37,10 +37,30 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+
+      if (userCredential.user == null) {
+        throw Exception('Authentication successful, but user object is null.');
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (!userDoc.exists || userDoc.data()?['role'] != 'parent') {
+        await FirebaseAuth.instance.signOut();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('No parent account found with this email.'),
+          ),
+        );
+        return;
+      }
 
       navigator.pushReplacementNamed('/parent_dashboard');
     } on FirebaseAuthException catch (e) {
@@ -53,79 +73,19 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         message = 'Invalid credentials, please check your email and password.';
       } else {
         if (kDebugMode) {
-          print('Firebase Auth Error: ${e.code}');
+          print('Firebase Auth Error: ${e.code} - ${e.message}');
         }
         message = 'An error occurred. Please try again.';
       }
       scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
+      if (kDebugMode) {
+        print('An unexpected error occurred during sign-in: $e');
+      }
       scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('An unexpected error occurred.')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      if (googleUser == null) {
-        // The user canceled the sign-in
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      if (user == null) {
-        throw Exception('Sign in with Google failed, user is null.');
-      }
-
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(user.uid);
-      final docSnapshot = await userDocRef.get();
-
-      if (!docSnapshot.exists) {
-        await user.updateDisplayName(googleUser.displayName);
-        await userDocRef.set({
-          'name': user.displayName ?? googleUser.displayName ?? 'N/A',
-          'email': user.email,
-          'role': 'parent',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      navigator.pushReplacementNamed('/parent_dashboard');
-    } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('An error occurred with Google Sign-In.')),
+        SnackBar(
+          content: Text('An unexpected error occurred: ${e.toString()}'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -144,153 +104,131 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         elevation: 0,
         leading: const BackButton(color: Colors.black),
       ),
-      body:
-        SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32.0,
-                  vertical: 16.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/img/logo.png',
-                        width: MediaQuery.of(context).size.width * 0.3,
-                        fit: BoxFit.contain,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 16.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/img/logo.png',
+                      width: MediaQuery.of(context).size.width * 0.3,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Parent Login',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Parent Login',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 48),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        labelText: 'Email',
+                        hintText: 'you@example.com',
+                        fillColor: Colors.white.withOpacity(0.8),
+                        filled: true,
                       ),
-                      const SizedBox(height: 48),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          labelText: 'Email',
-                          hintText: 'you@example.com',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
+                        labelText: 'Password',
+                        fillColor: Colors.white.withOpacity(0.8),
+                        filled: true,
                       ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          labelText: 'Password',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 40),
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              onPressed: _signIn,
-                              style: ElevatedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: const Color(0xFF01060A),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                fixedSize: const Size(345, 55),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 40),
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton(
+                            onPressed: _signIn,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: const Color(0xFF01060A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              fixedSize: const Size(345, 55),
                             ),
-                      const SizedBox(height: 16),
-                      const Text('or', style: TextStyle(color: Colors.black54)),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        icon: Image.asset('assets/img/google_logo.png',
-                            height: 24.0),
-                        label: const Text('Sign In with Google'),
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          backgroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.grey),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          fixedSize: const Size(345, 55),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Don't have an account?",
-                            style:
-                                TextStyle(fontSize: 16, color: Colors.black54),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                '/parent_signup',
-                              );
-                            },
+
                             child: const Text(
-                              'Sign Up',
+                              'Sign In',
                               style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
                                 fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account?",
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/parent_signup',
+                            );
+                          },
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
+      ),
     );
   }
 }

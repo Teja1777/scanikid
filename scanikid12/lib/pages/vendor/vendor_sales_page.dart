@@ -128,10 +128,9 @@ class _VendorSalesPageState extends State<VendorSalesPage> {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: ExpansionTile(
-                title: Text(
-                  'Student: ${data['studentName'] ?? 'N/A'} (ID: ${data['studentRollNo'] ?? 'N/A'}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                title: Text('Student: ${data['studentName'] ?? 'N/A'} (ID: ${data['studentRollNo'] ?? 'N/A'})',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis)),
                 subtitle: Text(date),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

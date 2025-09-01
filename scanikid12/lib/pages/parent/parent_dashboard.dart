@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 
-
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
 
@@ -41,11 +40,7 @@ class QRCodeScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            QrImageView(
-              data: qrData,
-              version: QrVersions.auto,
-              size: qrSize,
-            ),
+            QrImageView(data: qrData, version: QrVersions.auto, size: qrSize),
           ],
         ),
       ),
@@ -55,7 +50,7 @@ class QRCodeScreen extends StatelessWidget {
 
 class _ParentDashboardScreenState extends State<ParentDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
- 
+
   final TextEditingController _studentNameController = TextEditingController();
   final TextEditingController _studentIdController = TextEditingController();
 
@@ -66,17 +61,16 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     super.initState();
     _initializeStreamsIfNeeded();
   }
+
   void _initializeStreamsIfNeeded() {
     debugPrint('--- INITIALIZING STREAMS ---');
     _unpaidPurchasesStream ??= FirebaseFirestore.instance
         .collection('purchases')
         .where('parentId', isEqualTo: _currentUser!.uid)
         .where('status', isEqualTo: 'unpaid')
-        
-        
-        
         .snapshots();
   }
+
   void _showAddStudentDialog() {
     showDialog(
       context: context,
@@ -171,8 +165,9 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               ),
                             );
                           } on FirebaseException catch (e) {
-                            
-                            debugPrint("Firebase Error: ${e.message} (Code: ${e.code})");
+                            debugPrint(
+                              "Firebase Error: ${e.message} (Code: ${e.code})",
+                            );
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
                                 SnackBar(
@@ -186,7 +181,6 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               });
                             }
                           } catch (e) {
-                            
                             debugPrint("Unexpected Error: $e");
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
@@ -228,10 +222,51 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     }
   }
 
+  Future<void> _deleteStudent(String studentDocId, String studentName) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Student?'),
+        content: Text(
+            'Are you sure you want to delete the profile for "$studentName"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUser!.uid)
+            .collection('students')
+            .doc(studentDocId)
+            .delete();
+
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('"$studentName" was deleted.')),
+        );
+      } catch (e) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Failed to delete student: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
-      
       debugPrint('--- BUILD: Current user is null! ---');
       return const Scaffold(
         body: Center(child: Text('Error: User not found.')),
@@ -240,7 +275,6 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-
         elevation: 0,
         backgroundColor: Colors.white,
         leadingWidth: 100,
@@ -274,12 +308,15 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             children: [
               Text(
                 _currentUser.displayName ?? 'Parent',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Text(
                 'Parent Account',
                 style: TextStyle(color: Colors.black54, fontSize: 12),
-              )
+              ),
             ],
           ),
           const SizedBox(width: 8),
@@ -324,8 +361,9 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
         StreamBuilder<QuerySnapshot>(
           stream: _unpaidPurchasesStream,
           builder: (context, snapshot) {
-            final unpaidCount =
-                snapshot.hasData ? snapshot.data!.docs.length : 0;
+            final unpaidCount = snapshot.hasData
+                ? snapshot.data!.docs.length
+                : 0;
             return _buildNavigationButton(
               label: 'Purchases',
               icon: Icons.shopping_cart_outlined,
@@ -333,7 +371,8 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const ParentPurchasesPage()),
+                    builder: (context) => const ParentPurchasesPage(),
+                  ),
                 );
               },
               notificationCount: unpaidCount,
@@ -354,7 +393,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Close'),
-                  )
+                  ),
                 ],
               ),
             );
@@ -416,8 +455,10 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                       ),
                       child: Text(
                         '$notificationCount',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -515,23 +556,60 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          studentName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QRCodeScreen(
+                            qrData: qrData,
+                            studentName: studentName,
+                            studentRollNo: studentRollNo,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text('ID: $studentRollNo'),
-                        const SizedBox(height: 16),
-                        Center(child: QrImageView(data: qrData, size: 100.0)),
-                      ],
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  studentName,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline,
+                                    color: Colors.redAccent),
+                                onPressed: () => _deleteStudent(
+                                  studentDoc.id,
+                                  studentName,
+                                ),
+                                tooltip: 'Delete Student',
+                              ),
+                            ],
+                          ),
+                          Text('ID: $studentRollNo'),
+                          const SizedBox(height: 8),
+                          Center(child: QrImageView(data: qrData, size: 100.0)),
+                          const SizedBox(height: 8),
+                          const Center(
+                            child: Text(
+                              'Tap to view larger QR code',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
