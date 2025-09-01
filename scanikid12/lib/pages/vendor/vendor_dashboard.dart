@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:scanikid12/pages/vendor/vendor_sales_page.dart';
 
+
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
 
@@ -181,8 +182,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
         backgroundColor: Colors.white,
+        elevation: 0,
         leadingWidth: 100,
         leading: const Padding(
           padding: EdgeInsets.only(left: 16.0),
@@ -199,7 +200,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
         actions: [
           CircleAvatar(
-            backgroundColor: Color(0xFF6366F1),
+            backgroundColor: const Color(0xFF6366F1),
             child: Text(
               _currentUser?.displayName?.isNotEmpty == true
                   ? _currentUser!.displayName![0].toUpperCase()
@@ -208,19 +209,19 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             ),
           ),
           const SizedBox(width: 8),
-          Center(
-            child: Text(
-              _currentUser?.displayName ?? 'Vendor',
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Chip(
-            label: const Text('vendor'),
-            labelStyle: const TextStyle(fontSize: 12),
-            backgroundColor: Colors.grey[200],
-            padding: EdgeInsets.zero,
-            side: BorderSide.none,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _currentUser?.displayName ?? 'Vendor',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Vendor Account',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
+              )
+            ],
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -259,7 +260,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               _buildNavigationControls(),
               const SizedBox(height: 32),
 
-              // The content is now always the QR Scanner flow
+              
               _buildScannerContent(),
             ],
           ),
@@ -448,7 +449,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
                       )
                     : const Text(
                         'Send Receipt',
-                        style: TextStyle(color: Colors.white),
                       ),
               ),
             ),

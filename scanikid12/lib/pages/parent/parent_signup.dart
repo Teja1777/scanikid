@@ -92,10 +92,6 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
- 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.1;
-
     return  Scaffold(
   
         appBar: AppBar(
@@ -103,164 +99,172 @@ class _ParentSignUpPageState extends State<ParentSignUpPage> {
           elevation: 0,
           leading: const BackButton(color: Colors.black),
         ),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Create Parent Account',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: Color(0xFF4C9A48),
-                          fontWeight: FontWeight.bold,
+        body:
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/img/logo.png',
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          fit: BoxFit.contain,
                         ),
-                      ),
-                      const SizedBox(height: 48),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Create Parent Account',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
                           ),
-                          labelText: 'Full Name',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your full name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        const SizedBox(height: 48),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelText: 'Full Name',
+                            fillColor: Colors.white.withOpacity(0.8),
+                            filled: true,
                           ),
-                          labelText: 'Email',
-                          hintText: 'you@example.com',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your full name';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelText: 'Email',
+                            hintText: 'you@example.com',
+                            fillColor: Colors.white.withOpacity(0.8),
+                            filled: true,
                           ),
-                          labelText: 'Password',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                              return 'Please enter a valid email address';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters long';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelText: 'Password',
+                            fillColor: Colors.white.withOpacity(0.8),
+                            filled: true,
                           ),
-                          labelText: 'Confirm Password',
-                          fillColor: Colors.white.withOpacity(0.8),
-                          filled: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters long';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 40),
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              onPressed: _signUp,
-                              style: ElevatedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: const Color(0xFF01060A),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelText: 'Confirm Password',
+                            fillColor: Colors.white.withOpacity(0.8),
+                            filled: true,
+                          ),
+                          validator: (value) {
+                            if (value != _passwordController.text) {
+                              return 'Passwords do not match';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 40),
+                        _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : ElevatedButton(
+                                onPressed: _signUp,
+                                style: ElevatedButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  backgroundColor: const Color(0xFF01060A),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  fixedSize: const Size(345, 55),
+                                ),
+                                
+                                child: const Text(
+                                  'Sign Up',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              child: const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Already have an account?',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 18,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                  context, '/parent_login');
-                            },
-                            child: const Text(
-                              'Sign In',
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account?',
                               style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
+                                color: Colors.black54,
+                                fontSize: 16,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(
+                                    context, '/parent_login');
+                              },
+                              child: const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      
     );
   }
 }

@@ -76,12 +76,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
 
   @override
   Widget build(BuildContext context) {
- 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.1;
-
     return Scaffold(
-       
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -91,13 +86,19 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
           child: Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    
                     children: [
+                      Image.asset(
+                        'assets/img/logo.png',
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 24),
                       const Text(
                         'Vendor Login',
                         textAlign: TextAlign.center,
@@ -161,6 +162,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                fixedSize: const Size(345, 55),
                               ),
                               child: const Text(
                                 'Sign In',

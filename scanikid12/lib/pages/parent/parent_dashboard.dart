@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 
+
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
 
@@ -27,6 +28,7 @@ class QRCodeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qrSize = MediaQuery.of(context).size.width * 0.6;
     return Scaffold(
       appBar: AppBar(title: const Text('Student QR Code')),
       body: Center(
@@ -39,7 +41,11 @@ class QRCodeScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            QrImageView(data: qrData, version: QrVersions.auto, size: 200.0),
+            QrImageView(
+              data: qrData,
+              version: QrVersions.auto,
+              size: qrSize,
+            ),
           ],
         ),
       ),
@@ -66,9 +72,9 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
         .collection('purchases')
         .where('parentId', isEqualTo: _currentUser!.uid)
         .where('status', isEqualTo: 'unpaid')
-        // NOTE: This query requires a composite index in Firestore.
-        // If you see a "FAILED_PRECONDITION" error, use the link from
-        // the debug console to create the index.
+        
+        
+        
         .snapshots();
   }
   void _showAddStudentDialog() {
@@ -139,26 +145,21 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               'rollNo': studentRollNo,
                               'createdAt': FieldValue.serverTimestamp(),
                             };
-
                             final studentDocRef = await FirebaseFirestore
                                 .instance
                                 .collection('users')
                                 .doc(_currentUser!.uid)
                                 .collection('students')
                                 .add(newStudentData);
-
                             final qrData = jsonEncode({
                               'parentId': _currentUser.uid,
                               'studentDocId': studentDocRef.id,
                             });
-
                             await studentDocRef.update({'qrData': qrData});
-
                             if (!mounted) return;
                             Navigator.of(dialogContext).pop();
                             _studentNameController.clear();
                             _studentIdController.clear();
-
                             Navigator.push(
                               this.context,
                               MaterialPageRoute(
@@ -170,7 +171,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               ),
                             );
                           } on FirebaseException catch (e) {
-                            // This will catch specific Firebase errors, like permission denied.
+                            
                             debugPrint("Firebase Error: ${e.message} (Code: ${e.code})");
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
@@ -185,7 +186,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                               });
                             }
                           } catch (e) {
-                            // This will catch any other unexpected errors.
+                            
                             debugPrint("Unexpected Error: $e");
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
@@ -230,7 +231,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
-      // This is an edge case, but good to have.
+      
       debugPrint('--- BUILD: Current user is null! ---');
       return const Scaffold(
         body: Center(child: Text('Error: User not found.')),
@@ -267,19 +268,19 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             ),
           ),
           const SizedBox(width: 8),
-          Center(
-            child: Text(
-              _currentUser.displayName ?? 'Parent',
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Chip(
-            label: const Text('parent'),
-            labelStyle: const TextStyle(fontSize: 12),
-            backgroundColor: Colors.grey[200],
-            padding: EdgeInsets.zero,
-            side: BorderSide.none,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _currentUser.displayName ?? 'Parent',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Parent Account',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
+              )
+            ],
           ),
           const SizedBox(width: 8),
           IconButton(

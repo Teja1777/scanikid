@@ -55,9 +55,9 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         message = 'An error occurred. Please try again.';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (mounted) {
@@ -76,35 +76,38 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Use screen width for responsive padding
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.1;
-
-    return 
-     Scaffold(
-       
-        appBar: AppBar(
-         
-          elevation: 0,
-          leading: const BackButton(color: Colors.black),
-        ),
-        body: SafeArea(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const BackButton(color: Colors.black),
+      ),
+      body:
+        SafeArea(
           child: Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 16.0,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Image.asset(
+                        'assets/img/logo.png',
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 24),
                       const Text(
                         'Parent Login',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 32,
-                          color: Color(0xFF4C9A48),
+                          color: Colors.black87,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -162,7 +165,9 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                fixedSize: const Size(345, 55),
                               ),
+                              
                               child: const Text(
                                 'Sign In',
                                 style: TextStyle(
@@ -175,13 +180,20 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const Text(
+                            "Don't have an account?",
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
                           TextButton(
                             onPressed: () {
                               Navigator.pushReplacementNamed(
-                                  context, '/parent_signup');
+                                context,
+                                '/parent_signup',
+                              );
                             },
                             child: const Text(
-                              'Create an account',
+                              'Sign Up',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,
@@ -198,7 +210,6 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
             ),
           ),
         ),
-      );
-  
+    );
   }
 }

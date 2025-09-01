@@ -26,14 +26,10 @@ class Home extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Welcome to Scanikid',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4ADE80),
-                  ),
+                Image.asset(
+                  'assets/img/logo.png',
+                  width: screenWidth * 0.3,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 48),
                
