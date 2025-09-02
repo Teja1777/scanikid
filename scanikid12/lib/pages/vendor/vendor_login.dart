@@ -16,7 +16,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  @override
+  @override``
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
