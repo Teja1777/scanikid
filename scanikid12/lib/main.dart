@@ -8,6 +8,8 @@ import 'package:scanikid12/pages/vendor/vendor_signup.dart';
 import 'package:scanikid12/pages/vendor/vendor_dashboard.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:scanikid12/pages/splash_screen.dart';
+import 'package:scanikid12/pages/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +26,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/home',
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/home': (context) => const Home(),
         '/parent_login': (context) => const ParentLoginPage(),
         '/parent_signup': (context) => const ParentSignUpPage(),
@@ -33,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/vendor_login': (context) => const VendorLoginPage(),
         '/vendor_signup': (context) => const VendorSignUpPage(),
         '/vendor_dashboard': (context) => const VendorDashboard(),
+        '/auth_wrapper': (context) => const AuthWrapper(),
       },
     );
   }
