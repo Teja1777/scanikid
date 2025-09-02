@@ -21,7 +21,7 @@ class Home extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: Padding( 
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
