@@ -16,7 +16,6 @@ class Home extends StatelessWidget {
     // Make the icon and font size responsive to the button size.
     final iconSize = buttonSize * 0.4;
     final fontSize = buttonSize * 0.12;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
