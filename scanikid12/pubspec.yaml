@@ -72,7 +72,7 @@ flutter:
       - assets/img/vendor3.png
       - assets/img/logo.png
       - assets/img/google_logo.png
-      - assets/anim/
+      - 'assets/anim/kid.gif
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -19,7 +19,7 @@ class SplashScreen extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             width: 120, // Adjust size as needed
-            child: Lottie.asset('assets/anim/loading.json'),
+            child: Lottie.asset('assets/anim/kid.gif'),
           ),
         ],
       ),
