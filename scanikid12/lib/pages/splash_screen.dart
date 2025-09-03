@@ -8,24 +8,26 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return AnimatedSplashScreen(
       splash: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
             'assets/img/logo.png',
-            width: MediaQuery.of(context).size.width * 0.2,
+            width: screenWidth * 0.35, // 35% of screen width
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           SizedBox(
-            width: 100, // Adjust size as needed
-            child: Lottie.asset('assets/anim/kid.gif'),
+            width: screenWidth * 0.25, // 25% of screen width
+            child: Image.asset('assets/anim/kid.gif'),
           ),
         ],
       ),
+      splashIconSize: screenWidth * 0.4, // 40% of screen width
       nextScreen: const AuthWrapper(),
-      splashIconSize: 100, // Adjust this to fit your splash content
-      duration: 2000, // A more standard duration.
+      duration: 1500, // A more standard duration.
       backgroundColor: Colors.white,
       splashTransition: SplashTransition.fadeTransition,
       // For a smoother page transition, you can add the `page_transition` package
