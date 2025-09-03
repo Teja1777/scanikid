@@ -14,18 +14,18 @@ class SplashScreen extends StatelessWidget {
         children: [
           Image.asset(
             'assets/img/logo.png',
-            width: MediaQuery.of(context).size.width * 0.4,
+            width: MediaQuery.of(context).size.width * 0.2,
           ),
           const SizedBox(height: 20),
           SizedBox(
-            width: 120, // Adjust size as needed
+            width: 100, // Adjust size as needed
             child: Lottie.asset('assets/anim/kid.gif'),
           ),
         ],
       ),
       nextScreen: const AuthWrapper(),
-      splashIconSize: 400, // Adjust this to fit your splash content
-      duration: 3000, // A more standard duration.
+      splashIconSize: 100, // Adjust this to fit your splash content
+      duration: 2000, // A more standard duration.
       backgroundColor: Colors.white,
       splashTransition: SplashTransition.fadeTransition,
       // For a smoother page transition, you can add the `page_transition` package
