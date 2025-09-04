@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'camera_handle.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'camera_handle.dart';
 import 'package:scanikid12/pages/vendor/vendor_sales_page.dart';
-
+import 'package:scanikid12/pages/vendor/vendor_login.dart'; // <-- import login page
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -16,14 +16,13 @@ class VendorDashboard extends StatefulWidget {
 class _VendorDashboardScreenState extends State<VendorDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  
+  int _selectedIndex = 0;
   String? _scannedParentId;
   String? _scannedStudentDocId;
   String? _scannedStudentName;
   String? _scannedStudentRollNo;
-  bool _isProcessingScan = false;
 
-  
+  bool _isProcessingScan = false;
   final List<PurchaseItem> _purchaseItems = [];
   final _itemNameController = TextEditingController();
   final _itemPriceController = TextEditingController();
@@ -37,21 +36,27 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     super.dispose();
   }
 
-  Future<void> _startScanner() async {
-    
-    _resetScan();
+  late final List<Widget> _pages = [
+    _buildHomePage(),
+    const VendorSalesPage(),
+    _buildNotificationsPage(),
+    _buildProfilePage(),
+  ];
 
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
+  }
+
+  /// ---------------- QR SCANNER ----------------
+  Future<void> _startScanner() async {
+    _resetScan();
     final scannedValue = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const QRScannerScreen()),
     );
-
     if (scannedValue == null || scannedValue.isEmpty) return;
 
-    setState(() {
-      _isProcessingScan = true;
-    });
-
+    setState(() => _isProcessingScan = true);
     try {
       final Map<String, dynamic> qrData = jsonDecode(scannedValue);
       final parentId = qrData['parentId'] as String?;
@@ -68,96 +73,21 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           .doc(studentDocId)
           .get();
 
-      if (!studentDoc.exists) {
-        throw Exception('Student not found in the database.');
-      }
+      if (!studentDoc.exists) throw Exception('Student not found.');
 
       final studentData = studentDoc.data()!;
       setState(() {
         _scannedParentId = parentId;
         _scannedStudentDocId = studentDocId;
-        _scannedStudentName = studentData['name'] as String?;
-        _scannedStudentRollNo = studentData['rollNo'] as String?;
+        _scannedStudentName = studentData['name'];
+        _scannedStudentRollNo = studentData['rollNo'];
       });
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
+          .showSnackBar(SnackBar(content: Text('Scan failed: $e')));
       _resetScan();
     } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessingScan = false;
-        });
-      }
-    }
-  }
-
-  void _addItem() {
-    final name = _itemNameController.text;
-    final price = double.tryParse(_itemPriceController.text);
-
-    if (name.isNotEmpty && price != null && price > 0) {
-      setState(() {
-        _purchaseItems.add(PurchaseItem(name: name, price: price));
-        _totalAmount += price;
-      });
-      _itemNameController.clear();
-      _itemPriceController.clear();
-      FocusScope.of(context).unfocus(); 
-    }
-  }
-
-  Future<void> _sendReceipt() async {
-    if (_purchaseItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one item.')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSendingReceipt = true;
-    });
-
-    try {
-      final purchaseData = {
-        'vendorId': _currentUser!.uid,
-        'vendorName': _currentUser.displayName ?? 'N/A',
-        'parentId': _scannedParentId,
-        'studentDocId': _scannedStudentDocId,
-        'studentName': _scannedStudentName,
-        'studentRollNo': _scannedStudentRollNo,
-        'items': _purchaseItems.map((item) => item.toMap()).toList(),
-        'totalAmount': _totalAmount,
-        'status': 'unpaid', 
-        'createdAt': FieldValue.serverTimestamp(),
-      };
-
-      
-      await FirebaseFirestore.instance
-          .collection('purchases')
-          .add(purchaseData);
-
-      
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt sent successfully!')),
-      );
-
-      
-      _resetScan();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send receipt: ${e.toString()}')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSendingReceipt = false;
-        });
-      }
+      setState(() => _isProcessingScan = false);
     }
   }
 
@@ -175,325 +105,273 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leadingWidth: 100,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Center(
-            child: Text(
-              'ScanKid',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          CircleAvatar(
-            backgroundColor: const Color(0xFF6366F1),
-            child: Text(
-              _currentUser?.displayName?.isNotEmpty == true
-                  ? _currentUser!.displayName![0].toUpperCase()
-                  : 'V',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _currentUser?.displayName ?? 'Vendor',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                'Vendor Account',
-                style: TextStyle(color: Colors.black54, fontSize: 12),
-              )
-            ],
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.logout_outlined, color: Colors.black54),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/home');
-              }
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Vendor Dashboard',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Scan student QR codes and create purchase requests',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 24),
+  /// ---------------- HOME PAGE ----------------
+  Widget _buildHomePage() {
+    final screenWidth = MediaQuery.of(context).size.width;
 
-              _buildNavigationControls(),
-              const SizedBox(height: 32),
-
-              
-              _buildScannerContent(),
-            ],
-          ),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDashboardShortcuts(screenWidth),
+            const SizedBox(height: 24),
+            _scannedStudentName != null
+                ? _buildReceiptCreationUI()
+                : _buildScannerPlaceholder(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildNavigationControls() {
-    return Row(
-      children: [
-        _buildNavigationButton(
-          label: 'My Sales',
-          icon: Icons.point_of_sale_outlined,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const VendorSalesPage()),
-            );
-          },
-        ),
-      ],
-    );
-  }
+  /// Dashboard quick actions grid
+  Widget _buildDashboardShortcuts(double screenWidth) {
+    final shortcuts = [
+      {'icon': Icons.today, 'label': 'Today', 'page': const VendorSalesPage()},
+      {'icon': Icons.list, 'label': 'All Transactions', 'page': const VendorSalesPage()},
+      {'icon': Icons.block, 'label': 'Block List', 'page': PlaceholderPage(title: 'Block List')},
+      {'icon': Icons.bar_chart, 'label': 'Reports', 'page': PlaceholderPage(title: 'Reports')},
+    ];
 
-  Widget _buildScannerContent() {
-    if (_isProcessingScan) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_scannedStudentName != null) {
-      return _buildReceiptCreationUI();
-    }
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: shortcuts.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: screenWidth < 600 ? 2 : 4,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: screenWidth < 600 ? 1 : 1.2,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Scan Student QR Code',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      itemBuilder: (context, index) {
+        final item = shortcuts[index];
+        return InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => item['page'] as Widget),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _startScanner,
-            icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-            label: const Text('Start QR Scanner'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReceiptCreationUI() {
-    return Column(
-      children: [
-        
-        Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 3,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Student Details',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.person, color: Color(0xFF6366F1)),
-                  title: Text(
-                    _scannedStudentName ?? 'N/A',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('ID: ${_scannedStudentRollNo ?? 'N/A'}'),
+                Icon(item['icon'] as IconData,
+                    size: screenWidth * 0.1 > 50 ? 50 : screenWidth * 0.1,
+                    color: Colors.deepPurple),
+                const SizedBox(height: 8),
+                Text(
+                  item['label'] as String,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.04 > 18 ? 18 : screenWidth * 0.04),
                 ),
               ],
             ),
           ),
-        ),
-        const SizedBox(height: 24),
-
-        
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: _itemNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Item Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: TextField(
-                controller: _itemPriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Price',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.add_circle, color: Color(0xFF6366F1)),
-              onPressed: _addItem,
-              iconSize: 36,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _purchaseItems.length,
-          itemBuilder: (context, index) {
-            final item = _purchaseItems[index];
-            return ListTile(
-              title: Text(item.name),
-              trailing: Text('₹${item.price.toStringAsFixed(2)}'),
-            );
-          },
-        ),
-        const Divider(),
-
-        
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '₹${_totalAmount.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _resetScan,
-                child: const Text('Cancel'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isSendingReceipt ? null : _sendReceipt,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                ),
-                child: _isSendingReceipt
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Send Receipt',
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildNavigationButton({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    Widget buttonContent = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: const Color(0xFF6366F1), size: 20),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF6366F1),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
+  Widget _buildScannerPlaceholder() {
+    return const Center(
+      child: Text(
+        " ",
+        style: TextStyle(color: Colors.white),
+      ),
     );
+  }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(99, 102, 241, 0.1),
-          borderRadius: BorderRadius.circular(8),
+  /// ---------------- OTHER PAGES ----------------
+  Widget _buildNotificationsPage() {
+    return const Center(child: Text("No new notifications."));
+  }
+
+  Widget _buildProfilePage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: Colors.deepPurple,
+            child: Text(
+              _currentUser?.displayName?.isNotEmpty == true
+                  ? _currentUser!.displayName![0].toUpperCase()
+                  : 'V',
+              style: const TextStyle(fontSize: 30, color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(_currentUser?.displayName ?? "Vendor",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text("Vendor Account"),
+        ],
+      ),
+    );
+  }
+
+  /// ---------------- UI BUILD ----------------
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Vendor Dashboard"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(_currentUser?.displayName ?? "Vendor"),
+              accountEmail: Text(_currentUser?.email ?? "No Email"),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.store, color: Colors.deepPurple),
+              ),
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text("About Us"),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PlaceholderPage(title: "About Us")),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text("Sign Out"),
+              onTap: () async {
+                // Show spinner
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(child: CircularProgressIndicator()),
+                );
+                await FirebaseAuth.instance.signOut();
+                if (mounted) {
+                  Navigator.pop(context); // close spinner
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const VendorLoginPage()),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: const Text("Delete Account"),
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text("Delete Account"),
+                    content: const Text("Are you sure you want to permanently delete this account? This action cannot be undone."),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Cancel"),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text("Delete"),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => const Center(
+                      child: CircularProgressIndicator(color: Colors.red),
+                    ),
+                  );
+                  try {
+                    await _currentUser?.delete();
+                    if (mounted) {
+                      Navigator.pop(context); // close spinner
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const VendorLoginPage()),
+                      );
+                    }
+                  } catch (e) {
+                    Navigator.pop(context); // close spinner
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error deleting account: $e")),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
         ),
-        child: buttonContent,
+      ),
+      body: _pages[_selectedIndex],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _startScanner,
+        backgroundColor: Colors.deepPurple,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.qr_code_scanner, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.deepPurple,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(Icons.history), label: "Transactions"),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notifications"),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ---------------- RECEIPT CREATION ----------------
+  Widget _buildReceiptCreationUI() {
+    return Card(
+      elevation: 2,
+      child: ListTile(
+        title: Text(_scannedStudentName ?? 'N/A'),
+        subtitle: Text("ID: ${_scannedStudentRollNo ?? 'N/A'}"),
       ),
     );
   }
 }
 
+/// ---------------- SUPPORT CLASSES ----------------
 class PurchaseItem {
   final String name;
   final double price;
-
   PurchaseItem({required this.name, required this.price});
-
   Map<String, dynamic> toMap() => {'name': name, 'price': price};
+}
+
+class PlaceholderPage extends StatelessWidget {
+  final String title;
+  const PlaceholderPage({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title), backgroundColor: Colors.deepPurple),
+      body: Center(child: Text("$title Page")),
+    );
+  }
 }
