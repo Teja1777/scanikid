@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
+import 'package:scanikid12/pages/parent/parent_login.dart'; // ✅ import login page
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -17,6 +18,8 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   int _selectedIndex = 0; // bottom nav index
+
+  // Pages for bottom nav
   late final List<Widget> _pages;
 
   @override
@@ -39,11 +42,63 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ParentLoginPage()), // ✅ go to parent-login.dart
+      );
     }
   }
 
-  /// HOME PAGE CONTENT
+  /// DELETE ACCOUNT CONFIRMATION
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text(
+          "This will permanently delete your account and all associated data. Are you sure?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              try {
+                // Delete Firestore user data
+                await FirebaseFirestore.instance
+                    .collection("users")
+                    .doc(_currentUser!.uid)
+                    .delete();
+
+                // Delete Firebase Auth user
+                await _currentUser!.delete();
+
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ParentLoginPage()), // ✅ go to parent-login.dart
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error deleting account: $e")),
+                  );
+                }
+              }
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// HOME PAGE CONTENT (your old dashboard body without top buttons)
   Widget _buildHomePage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
@@ -64,16 +119,6 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _showAddStudentDialog,
-            icon: const Icon(Icons.add),
-            label: const Text("Add Student"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
           _buildStudentsContent(),
         ],
       ),
@@ -125,159 +170,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-  /// ADD STUDENT DIALOG
-  void _showAddStudentDialog() {
-    final nameController = TextEditingController();
-    final rollNoController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add Student"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Student Name"),
-            ),
-            TextField(
-              controller: rollNoController,
-              decoration: const InputDecoration(labelText: "Roll Number"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty &&
-                  rollNoController.text.isNotEmpty) {
-                final newStudent = {
-                  "name": nameController.text,
-                  "rollNo": rollNoController.text,
-                  "createdAt": FieldValue.serverTimestamp(),
-                };
-                final ref = await FirebaseFirestore.instance
-                    .collection("users")
-                    .doc(_currentUser!.uid)
-                    .collection("students")
-                    .add(newStudent);
-
-                final qrData = jsonEncode({
-                  "parentId": _currentUser!.uid,
-                  "studentDocId": ref.id,
-                });
-                await ref.update({"qrData": qrData});
-                Navigator.pop(context);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Student added successfully")),
-                  );
-                }
-              }
-            },
-            child: const Text("Add"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// EDIT STUDENT DIALOG
-  void _showEditStudentDialog(
-      String studentId, String currentName, String currentRollNo) {
-    final nameController = TextEditingController(text: currentName);
-    final rollNoController = TextEditingController(text: currentRollNo);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Student"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Student Name"),
-            ),
-            TextField(
-              controller: rollNoController,
-              decoration: const InputDecoration(labelText: "Roll Number"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty &&
-                  rollNoController.text.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection("users")
-                    .doc(_currentUser!.uid)
-                    .collection("students")
-                    .doc(studentId)
-                    .update({
-                  "name": nameController.text,
-                  "rollNo": rollNoController.text,
-                });
-                Navigator.pop(context);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Student updated successfully")),
-                  );
-                }
-              }
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// DELETE CONFIRMATION
-  void _confirmDeleteStudent(String studentId, String studentName) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Student"),
-        content: Text("Are you sure you want to delete $studentName?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await FirebaseFirestore.instance
-                  .collection("users")
-                  .doc(_currentUser!.uid)
-                  .collection("students")
-                  .doc(studentId)
-                  .delete();
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Student deleted")),
-                );
-              }
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// STUDENTS CONTENT
+  /// STUDENTS CONTENT (your existing student list with QR + edit + delete)
   Widget _buildStudentsContent() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -315,7 +208,8 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             final studentName = studentData['name'] ?? 'No Name';
             final studentRollNo = studentData['rollNo'] ?? 'No ID';
 
-            final qrData = studentData['qrData'] as String? ??
+            final qrData =
+                studentData['qrData'] as String? ??
                 jsonEncode({
                   'parentId': _currentUser!.uid,
                   'studentDocId': studentDoc.id,
@@ -367,6 +261,97 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
+  /// CONFIRM DELETE STUDENT
+  void _confirmDeleteStudent(String studentId, String studentName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Student"),
+        content: Text("Are you sure you want to delete $studentName?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUser!.uid)
+                  .collection('students')
+                  .doc(studentId)
+                  .delete();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Student deleted successfully")),
+                );
+              }
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// EDIT STUDENT
+  void _showEditStudentDialog(
+      String studentId, String currentName, String currentRollNo) {
+    final nameController = TextEditingController(text: currentName);
+    final rollNoController = TextEditingController(text: currentRollNo);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Student"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Student Name"),
+            ),
+            TextField(
+              controller: rollNoController,
+              decoration: const InputDecoration(labelText: "Roll Number"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty &&
+                  rollNoController.text.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_currentUser!.uid)
+                    .collection('students')
+                    .doc(studentId)
+                    .update({
+                  'name': nameController.text,
+                  'rollNo': rollNoController.text,
+                });
+                Navigator.pop(context);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Student updated successfully")),
+                  );
+                }
+              }
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
@@ -379,6 +364,65 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
       appBar: AppBar(
         title: const Text("ScaniKid"),
         backgroundColor: Colors.deepPurple,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child:
+                        Icon(Icons.person, size: 40, color: Colors.deepPurple),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _currentUser?.email ?? "Parent",
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info, color: Colors.deepPurple),
+              title: const Text("About Us"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutUsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library, color: Colors.deepPurple),
+              title: const Text("Video Explanation"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const VideoExplanationPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.blue),
+              title: const Text("Sign Out"),
+              onTap: _signOut,
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: const Text("Delete Account"),
+              onTap: _confirmDeleteAccount,
+            ),
+          ],
+        ),
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -429,6 +473,48 @@ class QRCodeScreen extends StatelessWidget {
             const SizedBox(height: 24),
             QrImageView(data: qrData, version: QrVersions.auto, size: qrSize),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ABOUT US PAGE
+class AboutUsPage extends StatelessWidget {
+  const AboutUsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("About Us")),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            "ScaniKid is a smart platform for parents to manage student purchases "
+            "and ensure secure transactions. Our goal is to make school purchases safe and easy.",
+            style: TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// VIDEO EXPLANATION PAGE
+class VideoExplanationPage extends StatelessWidget {
+  const VideoExplanationPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Video Explanation")),
+      body: const Center(
+        child: Text(
+          "This is where we will add video explanations or tutorials in the future.",
+          style: TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
         ),
       ),
     );
