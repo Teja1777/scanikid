@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'camera_handle.dart';
 import 'package:scanikid12/pages/vendor/vendor_sales_page.dart';
-import 'package:scanikid12/pages/vendor/vendor_login.dart'; // <-- import login page
+import 'package:scanikid12/pages/vendor/vendor_login.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -30,6 +30,12 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   bool _isSendingReceipt = false;
 
   @override
+  void initState() {
+    super.initState();
+    _checkAndBlockStudents(); // 🔹 check unpaid bills on dashboard load
+  }
+
+  @override
   void dispose() {
     _itemNameController.dispose();
     _itemPriceController.dispose();
@@ -41,10 +47,40 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     const VendorSalesPage(),
     _buildNotificationsPage(),
     _buildProfilePage(),
+    _buildBlockListPage(), // 🔹 Block List tab
   ];
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
+  }
+
+  /// ---------------- CHECK & BLOCK STUDENTS ----------------
+  Future<void> _checkAndBlockStudents() async {
+    final now = DateTime.now();
+
+    final transactionsSnapshot = await FirebaseFirestore.instance
+        .collectionGroup('transactions')
+        .where('status', isEqualTo: 'unpaid')
+        .get();
+
+    for (var doc in transactionsSnapshot.docs) {
+      final data = doc.data();
+      final dueDate = (data['dueDate'] as Timestamp).toDate();
+
+      if (now.isAfter(dueDate) && (data['blocked'] != true)) {
+        await doc.reference.update({'blocked': true});
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(data['parentId'])
+            .collection('notifications')
+            .add({
+          'message':
+              'Student ${data['studentName']} is blocked due to unpaid ₹${data['amount']}',
+          'timestamp': now,
+        });
+      }
+    }
   }
 
   /// ---------------- QR SCANNER ----------------
@@ -130,9 +166,21 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   Widget _buildDashboardShortcuts(double screenWidth) {
     final shortcuts = [
       {'icon': Icons.today, 'label': 'Today', 'page': const VendorSalesPage()},
-      {'icon': Icons.list, 'label': 'All Transactions', 'page': const VendorSalesPage()},
-      {'icon': Icons.block, 'label': 'Block List', 'page': PlaceholderPage(title: 'Block List')},
-      {'icon': Icons.bar_chart, 'label': 'Reports', 'page': PlaceholderPage(title: 'Reports')},
+      {
+        'icon': Icons.list,
+        'label': 'All Transactions',
+        'page': const VendorSalesPage()
+      },
+      {
+        'icon': Icons.block,
+        'label': 'Block List',
+        'page': const PlaceholderPage(title: 'Block List')
+      },
+      {
+        'icon': Icons.bar_chart,
+        'label': 'Reports',
+        'page': PlaceholderPage(title: 'Reports')
+      },
     ];
 
     return GridView.builder(
@@ -153,7 +201,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             MaterialPageRoute(builder: (_) => item['page'] as Widget),
           ),
           child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 3,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -166,7 +215,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
                   item['label'] as String,
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.04 > 18 ? 18 : screenWidth * 0.04),
+                      fontSize:
+                          screenWidth * 0.04 > 18 ? 18 : screenWidth * 0.04),
                 ),
               ],
             ),
@@ -178,10 +228,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
 
   Widget _buildScannerPlaceholder() {
     return const Center(
-      child: Text(
-        " ",
-        style: TextStyle(color: Colors.white),
-      ),
+      child: Text("Scan a student QR code", style: TextStyle(fontSize: 16)),
     );
   }
 
@@ -207,11 +254,42 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           ),
           const SizedBox(height: 16),
           Text(_currentUser?.displayName ?? "Vendor",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           const Text("Vendor Account"),
         ],
       ),
+    );
+  }
+
+  /// ---------------- BLOCK LIST PAGE ----------------
+  Widget _buildBlockListPage() {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collectionGroup('transactions')
+          .where('blocked', isEqualTo: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final docs = snapshot.data!.docs;
+
+        if (docs.isEmpty) {
+          return const Center(child: Text("No blocked students."));
+        }
+
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data();
+            return ListTile(
+              leading: const Icon(Icons.block, color: Colors.red),
+              title: Text(data['studentName']),
+              subtitle: Text("Pending: ₹${data['amount']}"),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -240,22 +318,16 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               title: const Text("About Us"),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PlaceholderPage(title: "About Us")),
+                MaterialPageRoute(
+                    builder: (_) => const PlaceholderPage(title: "About Us")),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Sign Out"),
               onTap: () async {
-                // Show spinner
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => const Center(child: CircularProgressIndicator()),
-                );
                 await FirebaseAuth.instance.signOut();
                 if (mounted) {
-                  Navigator.pop(context); // close spinner
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const VendorLoginPage()),
@@ -269,42 +341,32 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
               onTap: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
-                  builder: (_) => AlertDialog(
+                  builder: (ctx) => AlertDialog(
                     title: const Text("Delete Account"),
-                    content: const Text("Are you sure you want to permanently delete this account? This action cannot be undone."),
+                    content: const Text(
+                        "Are you sure you want to permanently delete your account?"),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text("Cancel"),
-                      ),
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text("Cancel")),
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text("Delete"),
-                      ),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text("Delete")),
                     ],
                   ),
                 );
 
                 if (confirm == true) {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (_) => const Center(
-                      child: CircularProgressIndicator(color: Colors.red),
-                    ),
-                  );
                   try {
                     await _currentUser?.delete();
-                    if (mounted) {
-                      Navigator.pop(context); // close spinner
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const VendorLoginPage()),
-                      );
-                    }
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const VendorLoginPage()),
+                    );
                   } catch (e) {
-                    Navigator.pop(context); // close spinner
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Error deleting account: $e")),
                     );
@@ -325,7 +387,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
+        notchMargin: 8,
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
@@ -334,8 +396,10 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           unselectedItemColor: Colors.grey,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-            BottomNavigationBarItem(icon: Icon(Icons.history), label: "Transactions"),
-            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notifications"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.history), label: "Transactions"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.notifications), label: "Notifications"),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           ],
         ),
@@ -370,7 +434,8 @@ class PlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title), backgroundColor: Colors.deepPurple),
+      appBar:
+          AppBar(title: Text(title), backgroundColor: Colors.deepPurple),
       body: Center(child: Text("$title Page")),
     );
   }
