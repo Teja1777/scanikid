@@ -12,8 +12,7 @@ class ParentDashboard extends StatefulWidget {
 
   @override
   State<ParentDashboard> createState() => _ParentDashboardScreenState();
-}
-
+}  
 class _ParentDashboardScreenState extends State<ParentDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
