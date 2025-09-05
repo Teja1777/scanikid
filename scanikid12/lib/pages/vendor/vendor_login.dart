@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_social_button/flutter_social_button.dart';
 
 class VendorLoginPage extends StatefulWidget {
   const VendorLoginPage({super.key});
@@ -21,6 +22,10 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+  void googleSignIn() async {
+    
+    // Implement Google Sign-In logic here
   }
 
   Future<void> _signIn() async {
@@ -216,6 +221,10 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                         ),
                       ],
                     ),
+                    FlutterSocialButton(
+                onTap: () {},
+                buttonType: ButtonType.google, // Button type for different type buttons
+              ),
                   ],
                 ),
               ),
