@@ -25,6 +25,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
   }
   void googleSignIn() async {
     
+    
     // Implement Google Sign-In logic here
   }
 
