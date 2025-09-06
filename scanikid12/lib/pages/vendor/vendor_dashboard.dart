@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:scanikid12/pages/vendor/vendor_sales_page.dart';
 
-
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
 
@@ -16,19 +15,19 @@ class VendorDashboard extends StatefulWidget {
 class _VendorDashboardScreenState extends State<VendorDashboard> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  
   String? _scannedParentId;
   String? _scannedStudentDocId;
   String? _scannedStudentName;
   String? _scannedStudentRollNo;
   bool _isProcessingScan = false;
 
-  
   final List<PurchaseItem> _purchaseItems = [];
   final _itemNameController = TextEditingController();
   final _itemPriceController = TextEditingController();
   double _totalAmount = 0.0;
   bool _isSendingReceipt = false;
+
+  int _selectedIndex = 0;
 
   @override
   void dispose() {
@@ -38,7 +37,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   }
 
   Future<void> _startScanner() async {
-    
     _resetScan();
 
     final scannedValue = await Navigator.push<String>(
@@ -81,8 +79,9 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Scan failed: ${e.toString()}')),
+      );
       _resetScan();
     } finally {
       if (mounted) {
@@ -104,7 +103,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       });
       _itemNameController.clear();
       _itemPriceController.clear();
-      FocusScope.of(context).unfocus(); 
+      FocusScope.of(context).unfocus();
     }
   }
 
@@ -130,22 +129,16 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         'studentRollNo': _scannedStudentRollNo,
         'items': _purchaseItems.map((item) => item.toMap()).toList(),
         'totalAmount': _totalAmount,
-        'status': 'unpaid', 
+        'status': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      
-      await FirebaseFirestore.instance
-          .collection('purchases')
-          .add(purchaseData);
-
-      
+      await FirebaseFirestore.instance.collection('purchases').add(purchaseData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Receipt sent successfully!')),
       );
 
-      
       _resetScan();
     } catch (e) {
       if (!mounted) return;
@@ -179,14 +172,14 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.deepPurple,
         elevation: 0,
         leadingWidth: 100,
         leading: const Padding(
           padding: EdgeInsets.only(left: 16.0),
           child: Center(
             child: Text(
-              'ScanKid',
+              'ScaniKid',
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -212,7 +205,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
             children: [
               Text(
                 _currentUser?.displayName ?? 'Vendor',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold),
               ),
               const Text(
                 'Vendor Account',
@@ -233,6 +227,84 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           const SizedBox(width: 8),
         ],
       ),
+
+      // Floating QR Scanner Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF6366F1),
+        shape: const CircleBorder(),
+        onPressed: _startScanner,
+        child: const Icon(Icons.qr_code_scanner_rounded, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      // Bottom Navigation Bar
+bottomNavigationBar: BottomAppBar(
+  shape: const CircularNotchedRectangle(),
+  notchMargin: 8.0,
+  child: BottomNavigationBar(
+    type: BottomNavigationBarType.fixed,
+    currentIndex: _selectedIndex,
+    selectedItemColor: Colors.blue,
+    unselectedItemColor: Colors.black54,
+    onTap: (index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+
+      // Navigate only for My Sales
+      if (index == 2) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VendorSalesPage()),
+        );
+      }
+      // Navigate only for Home
+      else if (index == 0) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VendorDashboard()),
+        );
+        // Implement navigation to Home
+      }
+      // Navigate only for Profile
+      else if (index == 3) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>Placeholder()),
+        );
+        // Implement navigation to Profile
+      }
+      // Implement other navigations as needed
+      else if (index == 1) {
+        // Implement navigation to Transaction History
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>Placeholder()),
+        );  
+      }
+    },
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        label: "Home",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.history),
+        label: "Transaction History",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.point_of_sale_outlined),
+        label: "My Sales",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline),
+        label: "Profile",
+      ),
+    ],
+  ),
+),
+
+      // Body remains same
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -248,16 +320,12 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Scan student QR codes and create purchase requests',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
+              
               const SizedBox(height: 24),
 
               _buildNavigationControls(),
               const SizedBox(height: 32),
 
-              
               _buildScannerContent(),
             ],
           ),
@@ -267,22 +335,22 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   }
 
   Widget _buildNavigationControls() {
-    return Row(
+    return Column(
       children: [
         _buildNavigationButton(
-          label: 'My Sales',
-          icon: Icons.point_of_sale_outlined,
+          label: 'Block list',
+          icon: Icons.person_outline,
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const VendorSalesPage()),
+              MaterialPageRoute(builder: (context) => Placeholder()),
             );
+            // Implement navigation to Block list    
           },
-        ),
+        ),           
       ],
     );
   }
-
   Widget _buildScannerContent() {
     if (_isProcessingScan) {
       return const Center(child: CircularProgressIndicator());
@@ -297,28 +365,11 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Scan Student QR Code',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _startScanner,
-            icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-            label: const Text('Start QR Scanner'),
-          ),
-        ],
-      ),
     );
   }
-
   Widget _buildReceiptCreationUI() {
     return Column(
       children: [
-        
         Card(
           elevation: 2,
           child: Padding(
@@ -345,7 +396,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
         const SizedBox(height: 24),
 
-        
         Row(
           children: [
             Expanded(
@@ -367,9 +417,8 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
                   labelText: 'Price',
                   border: OutlineInputBorder(),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
             ),
             const SizedBox(width: 8),
@@ -382,7 +431,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
         const SizedBox(height: 16),
 
-        
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -397,7 +445,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
         const Divider(),
 
-        
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -419,7 +466,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         ),
         const SizedBox(height: 24),
 
-        
         Row(
           children: [
             Expanded(
@@ -460,21 +506,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    Widget buttonContent = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: const Color(0xFF6366F1), size: 20),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF6366F1),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -483,7 +514,20 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           color: const Color.fromRGBO(99, 102, 241, 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: buttonContent,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: const Color(0xFF6366F1), size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF6366F1),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

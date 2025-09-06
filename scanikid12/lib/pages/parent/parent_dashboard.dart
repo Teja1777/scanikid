@@ -5,13 +5,445 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
+import 'package:scanikid12/pages/parent/parent_login.dart'; // ✅ import login page
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
 
   @override
   State<ParentDashboard> createState() => _ParentDashboardScreenState();
+}  
+class _ParentDashboardScreenState extends State<ParentDashboard> {
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
+
+  int _selectedIndex = 0; // bottom nav index
+
+  // Pages for bottom nav
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      _buildHomePage(),
+      const ParentPurchasesPage(),
+      _buildNotificationsPage(),
+      _buildProfilePage(),
+    ];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ParentLoginPage()), // ✅ go to parent-login.dart
+      );
+    }
+  }
+
+  /// DELETE ACCOUNT CONFIRMATION
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text(
+          "This will permanently delete your account and all associated data. Are you sure?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              try {
+                // Delete Firestore user data
+                await FirebaseFirestore.instance
+                    .collection("users")
+                    .doc(_currentUser!.uid)
+                    .delete();
+
+                // Delete Firebase Auth user
+                await _currentUser!.delete();
+
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ParentLoginPage()), // ✅ go to parent-login.dart
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error deleting account: $e")),
+                  );
+                }
+              }
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// HOME PAGE CONTENT (your old dashboard body without top buttons)
+  Widget _buildHomePage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Parent Dashboard',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Manage your children and their purchases',
+            style: TextStyle(fontSize: 16, color: Colors.black54),
+          ),
+          const SizedBox(height: 24),
+          _buildStudentsContent(),
+        ],
+      ),
+    );
+  }
+
+  /// NOTIFICATIONS PAGE
+  Widget _buildNotificationsPage() {
+    return const Center(
+      child: Text(
+        "No new notifications.",
+        style: TextStyle(fontSize: 18, color: Colors.grey),
+      ),
+    );
+  }
+
+  /// PROFILE PAGE
+  Widget _buildProfilePage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: Colors.deepPurple,
+            child: Text(
+              _currentUser?.displayName?.isNotEmpty == true
+                  ? _currentUser!.displayName![0].toUpperCase()
+                  : "P",
+              style: const TextStyle(fontSize: 30, color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _currentUser?.displayName ?? "Parent",
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text("Parent Account", style: TextStyle(color: Colors.black54)),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _signOut,
+            icon: const Icon(Icons.logout),
+            label: const Text("Sign Out"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// STUDENTS CONTENT (your existing student list with QR + edit + delete)
+  Widget _buildStudentsContent() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .collection('students')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            height: 100,
+            width: double.infinity,
+            alignment: Alignment.center,
+            child: const Text(
+              'No students added yet. Click "+ Add Student" to begin.',
+              style: TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        final studentDocs = snapshot.data!.docs;
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: studentDocs.length,
+          itemBuilder: (context, index) {
+            final studentDoc = studentDocs[index];
+            final studentData = studentDoc.data() as Map<String, dynamic>;
+            final studentName = studentData['name'] ?? 'No Name';
+            final studentRollNo = studentData['rollNo'] ?? 'No ID';
+
+            final qrData =
+                studentData['qrData'] as String? ??
+                jsonEncode({
+                  'parentId': _currentUser!.uid,
+                  'studentDocId': studentDoc.id,
+                });
+
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: ListTile(
+                title: Text(studentName),
+                subtitle: Text("ID: $studentRollNo"),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.qr_code, color: Colors.deepPurple),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QRCodeScreen(
+                              qrData: qrData,
+                              studentName: studentName,
+                              studentRollNo: studentRollNo,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        _showEditStudentDialog(
+                            studentDoc.id, studentName, studentRollNo);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        _confirmDeleteStudent(studentDoc.id, studentName);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// CONFIRM DELETE STUDENT
+  void _confirmDeleteStudent(String studentId, String studentName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Student"),
+        content: Text("Are you sure you want to delete $studentName?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUser!.uid)
+                  .collection('students')
+                  .doc(studentId)
+                  .delete();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Student deleted successfully")),
+                );
+              }
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// EDIT STUDENT
+  void _showEditStudentDialog(
+      String studentId, String currentName, String currentRollNo) {
+    final nameController = TextEditingController(text: currentName);
+    final rollNoController = TextEditingController(text: currentRollNo);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Student"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Student Name"),
+            ),
+            TextField(
+              controller: rollNoController,
+              decoration: const InputDecoration(labelText: "Roll Number"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty &&
+                  rollNoController.text.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_currentUser!.uid)
+                    .collection('students')
+                    .doc(studentId)
+                    .update({
+                  'name': nameController.text,
+                  'rollNo': rollNoController.text,
+                });
+                Navigator.pop(context);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Student updated successfully")),
+                  );
+                }
+              }
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_currentUser == null) {
+      return const Scaffold(
+        body: Center(child: Text("Error: User not found.")),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("ScaniKid"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child:
+                        Icon(Icons.person, size: 40, color: Colors.deepPurple),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _currentUser?.email ?? "Parent",
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info, color: Colors.deepPurple),
+              title: const Text("About Us"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutUsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library, color: Colors.deepPurple),
+              title: const Text("Video Explanation"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const VideoExplanationPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.blue),
+              title: const Text("Sign Out"),
+              onTap: _signOut,
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: Colors.red),
+              title: const Text("Delete Account"),
+              onTap: _confirmDeleteAccount,
+            ),
+          ],
+        ),
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart), label: "Purchases"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.notifications), label: "Notifications"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        ],
+      ),
+    );
+  }
 }
+
+/// QR CODE SCREEN
 class QRCodeScreen extends StatelessWidget {
   final String qrData;
   final String studentName;
@@ -46,577 +478,44 @@ class QRCodeScreen extends StatelessWidget {
   }
 }
 
-class _ParentDashboardScreenState extends State<ParentDashboard> {
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
-
-  final TextEditingController _studentNameController = TextEditingController();
-  final TextEditingController _studentIdController = TextEditingController();
-
-  Stream<QuerySnapshot>? _unpaidPurchasesStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeStreamsIfNeeded();
-  }
-
-  void _initializeStreamsIfNeeded() {
-    debugPrint('--- INITIALIZING STREAMS ---');
-    _unpaidPurchasesStream ??= FirebaseFirestore.instance
-        .collection('purchases')
-        .where('parentId', isEqualTo: _currentUser!.uid)
-        .where('status', isEqualTo: 'unpaid')
-        .snapshots();
-  }
-
-  void _showAddStudentDialog() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        bool isAdding = false;
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Add New Student'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  TextField(
-                    controller: _studentNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Student Name',
-                    ),
-                  ),
-                  TextField(
-                    controller: _studentIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Roll Number/ID',
-                    ),
-                    keyboardType: TextInputType.text,
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Cancel'),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                    _studentNameController.clear();
-                    _studentIdController.clear();
-                  },
-                ),
-                ElevatedButton(
-                  onPressed: isAdding
-                      ? null
-                      : () async {
-                          final studentName = _studentNameController.text;
-                          final studentRollNo = _studentIdController.text;
-
-                          if (studentName.isEmpty || studentRollNo.isEmpty) {
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please enter student name and roll number.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final scaffoldMessenger = ScaffoldMessenger.of(
-                            this.context,
-                          );
-
-                          setState(() {
-                            isAdding = true;
-                          });
-
-                          try {
-                            final newStudentData = {
-                              'name': studentName,
-                              'rollNo': studentRollNo,
-                              'createdAt': FieldValue.serverTimestamp(),
-                            };
-                            final studentDocRef = await FirebaseFirestore
-                                .instance
-                                .collection('users')
-                                .doc(_currentUser!.uid)
-                                .collection('students')
-                                .add(newStudentData);
-                            final qrData = jsonEncode({
-                              'parentId': _currentUser.uid,
-                              'studentDocId': studentDocRef.id,
-                            });
-                            await studentDocRef.update({'qrData': qrData});
-
-                            if (!mounted) return;
-                            Navigator.of(dialogContext).pop();
-                            _studentNameController.clear();
-                            _studentIdController.clear();
-                            Navigator.push(
-                              this.context,
-                              MaterialPageRoute(
-                                builder: (context) => QRCodeScreen(
-                                  qrData: qrData,
-                                  studentName: studentName,
-                                  studentRollNo: studentRollNo,
-                                ),
-                              ),
-                            );
-                          } on FirebaseException catch (e) {
-                            debugPrint(
-                              "Firebase Error: ${e.message} (Code: ${e.code})",
-                            );
-                            if (mounted) {
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Error: ${e.message ?? "A Firebase error occurred."}',
-                                  ),
-                                ),
-                              );
-                              setState(() {
-                                isAdding = false;
-                              });
-                            }
-                          } catch (e) {
-                            debugPrint("Unexpected Error: $e");
-                            if (mounted) {
-                              scaffoldMessenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'An unexpected error occurred. Please try again.',
-                                  ),
-                                ),
-                              );
-                              setState(() {
-                                isAdding = false;
-                              });
-                            }
-                          }
-                        },
-                  child: isAdding
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Add Student'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-  }
-
-  Future<void> _deleteStudent(String studentDocId, String studentName) async {
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Student?'),
-        content: Text(
-            'Are you sure you want to delete the profile for "$studentName"? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
-      try {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_currentUser!.uid)
-            .collection('students')
-            .doc(studentDocId)
-            .delete();
-
-        scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text('"$studentName" was deleted.')),
-        );
-      } catch (e) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text('Failed to delete student: $e')),
-        );
-      }
-    }
-  }
+/// ABOUT US PAGE
+class AboutUsPage extends StatelessWidget {
+  const AboutUsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (_currentUser == null) {
-      debugPrint('--- BUILD: Current user is null! ---');
-      return const Scaffold(
-        body: Center(child: Text('Error: User not found.')),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leadingWidth: 100,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Center(
-            child: Text(
-              'ScanKid',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
+      appBar: AppBar(title: const Text("About Us")),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            "ScaniKid is a smart platform for parents to manage student purchases "
+            "and ensure secure transactions. Our goal is to make school purchases safe and easy.",
+            style: TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
           ),
-        ),
-        actions: [
-          CircleAvatar(
-            backgroundColor: Colors.deepPurple,
-            child: Text(
-              _currentUser.displayName?.isNotEmpty == true
-                  ? _currentUser.displayName![0].toUpperCase()
-                  : 'P',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _currentUser.displayName ?? 'Parent',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Text(
-                'Parent Account',
-                style: TextStyle(color: Colors.black54, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.logout_outlined, color: Colors.black54),
-            onPressed: _signOut,
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Parent Dashboard',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Manage your children and their purchases',
-              style: TextStyle(fontSize: 16, color: Colors.black54),
-            ),
-            const SizedBox(height: 24),
-            _buildNavigationControls(),
-            const SizedBox(height: 24),
-            _buildStudentsContent(),
-          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildNavigationControls() {
-    return Row(
-      children: [
-        StreamBuilder<QuerySnapshot>(
-          stream: _unpaidPurchasesStream,
-          builder: (context, snapshot) {
-            final unpaidCount = snapshot.hasData
-                ? snapshot.data!.docs.length
-                : 0;
-            return _buildNavigationButton(
-              label: 'Purchases',
-              icon: Icons.shopping_cart_outlined,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ParentPurchasesPage(),
-                  ),
-                );
-              },
-              notificationCount: unpaidCount,
-            );
-          },
-        ),
-        const SizedBox(width: 16),
-        _buildNavigationButton(
-          label: 'Notifications',
-          icon: Icons.notifications_outlined,
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Notifications'),
-                content: const Text('No new notifications.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
+/// VIDEO EXPLANATION PAGE
+class VideoExplanationPage extends StatelessWidget {
+  const VideoExplanationPage({super.key});
 
-  Widget _buildNavigationButton({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-    int notificationCount = 0,
-  }) {
-    Widget buttonContent = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.deepPurple, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.deepPurple,
-            fontWeight: FontWeight.bold,
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Video Explanation")),
+      body: const Center(
+        child: Text(
+          "This is where we will add video explanations or tutorials in the future.",
+          style: TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
         ),
-      ],
-    );
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(103, 58, 183, 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: (notificationCount > 0)
-            ? Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: buttonContent,
-                  ),
-                  Positioned(
-                    top: -8,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 20,
-                        minHeight: 20,
-                      ),
-                      child: Text(
-                        '$notificationCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : buttonContent,
       ),
-    );
-  }
-
-  Widget _buildStudentsContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Your Students',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                _showAddStudentDialog();
-              },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Add Student'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 2,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .doc(_currentUser!.uid)
-              .collection('students')
-              .orderBy('createdAt', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Container(
-                height: 100,
-                width: double.infinity,
-                alignment: Alignment.center,
-                child: const Text(
-                  'No students added yet. Click "+ Add Student" to begin.',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              );
-            }
-            if (snapshot.hasError) {
-              return const Center(child: Text('Something went wrong.'));
-            }
-
-            final studentDocs = snapshot.data!.docs;
-
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: studentDocs.length,
-              itemBuilder: (context, index) {
-                final studentDoc = studentDocs[index];
-                final studentData = studentDoc.data() as Map<String, dynamic>;
-                final studentName = studentData['name'] ?? 'No Name';
-                final studentRollNo = studentData['rollNo'] ?? 'No ID';
-
-                final qrData =
-                    studentData['qrData'] as String? ??
-                    jsonEncode({
-                      'parentId': _currentUser.uid,
-                      'studentDocId': studentDoc.id,
-                    });
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QRCodeScreen(
-                            qrData: qrData,
-                            studentName: studentName,
-                            studentRollNo: studentRollNo,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  studentName,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    color: Colors.redAccent),
-                                onPressed: () => _deleteStudent(
-                                  studentDoc.id,
-                                  studentName,
-                                ),
-                                tooltip: 'Delete Student',
-                              ),
-                            ],
-                          ),
-                          Text('ID: $studentRollNo'),
-                          const SizedBox(height: 8),
-                          Center(child: QrImageView(data: qrData, size: 100.0)),
-                          const SizedBox(height: 8),
-                          const Center(
-                            child: Text(
-                              'Tap to view larger QR code',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
     );
   }
 }
