@@ -120,7 +120,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             icon: const Icon(Icons.add),
-            label: const Text("Add Student"),
+            label: const Text("Add Student",style: TextStyle(color: Colors.white),),
             style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 106, 74, 162)),
             onPressed: () => _showAddStudentDialog(),
           ),
