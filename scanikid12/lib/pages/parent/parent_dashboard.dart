@@ -97,7 +97,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-  /// HOME PAGE CONTENT (your old dashboard body without top buttons)
+   /// HOME PAGE CONTENT with Add Student button
   Widget _buildHomePage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
@@ -118,11 +118,85 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 24),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text("Add Student"),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 106, 74, 162)),
+            onPressed: () => _showAddStudentDialog(),
+          ),
+          const SizedBox(height: 16),
           _buildStudentsContent(),
         ],
       ),
     );
   }
+
+  /// ADD STUDENT DIALOG
+  void _showAddStudentDialog() {
+    final nameController = TextEditingController();
+    final rollNoController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Add Student"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Student Name"),
+            ),
+            TextField(
+              controller: rollNoController,
+              decoration: const InputDecoration(labelText: "Roll Number"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              final rollNo = rollNoController.text.trim();
+              if (name.isNotEmpty && rollNo.isNotEmpty) {
+                final qrData = jsonEncode({
+                  'parentId': _currentUser!.uid,
+                  'studentDocId': DateTime.now().millisecondsSinceEpoch.toString(),
+                  'studentName': name,
+                  'studentRollNo': rollNo,
+                });
+
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_currentUser!.uid)
+                    .collection('students')
+                    .add({
+                  'name': name,
+                  'rollNo': rollNo,
+                  'qrData': qrData,
+                  'createdAt': FieldValue.serverTimestamp(),
+                });
+
+                Navigator.pop(context);
+                if (mounted) {  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Student added successfully")),
+                  );
+                }
+              }
+            },
+            child: const Text("Add"),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   /// NOTIFICATIONS PAGE
   Widget _buildNotificationsPage() {
