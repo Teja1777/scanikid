@@ -97,7 +97,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
     );
   }
 
-   /// HOME PAGE CONTENT with Add Student button
+  /// HOME PAGE CONTENT (your old dashboard body without top buttons)
   Widget _buildHomePage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
@@ -117,87 +117,102 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             'Manage your children and their purchases',
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 40),
           ElevatedButton.icon(
             icon: const Icon(Icons.add),
-            label: const Text("Add Student",style: TextStyle(color: Colors.white),),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 106, 74, 162)),
-            onPressed: () => _showAddStudentDialog(),
+            label: const Text("Add Student"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white, // for icon and text color
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onPressed: () {
+             _showdialogbox();
+            },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _buildStudentsContent(),
         ],
       ),
     );
   }
-
-  /// ADD STUDENT DIALOG
-  void _showAddStudentDialog() {
-    final nameController = TextEditingController();
-    final rollNoController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add Student"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Student Name"),
+void _showdialogbox(
+    ) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          final nameController = TextEditingController();
+          final rollNoController = TextEditingController();
+          // Capture context-dependent objects before async gaps.
+          final navigator = Navigator.of(context);
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
+          return AlertDialog(
+            title: const Text("Add New Student"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration:
+                      const InputDecoration(labelText: "Student Name"),
+                ),
+                TextField(
+                  controller: rollNoController,
+                  decoration:
+                      const InputDecoration(labelText: "Roll Number"),
+                ),
+              ],
             ),
-            TextField(
-              controller: rollNoController,
-              decoration: const InputDecoration(labelText: "Roll Number"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final rollNo = rollNoController.text.trim();
-              if (name.isNotEmpty && rollNo.isNotEmpty) {
-                final qrData = jsonEncode({
-                  'parentId': _currentUser!.uid,
-                  'studentDocId': DateTime.now().millisecondsSinceEpoch.toString(),
-                  'studentName': name,
-                  'studentRollNo': rollNo,
-                });
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameController.text.isNotEmpty &&
+                      rollNoController.text.isNotEmpty) {
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(_currentUser!.uid)
+                        .collection('students')
+                        .add({
+                      'name': nameController.text,
+                      'rollNo': rollNoController.text,
+                      'createdAt': FieldValue.serverTimestamp(),
+                      'qrData': jsonEncode({
+                        'parentId': _currentUser!.uid,
+                        // 'studentId' will be added after doc creation
+                      }),
+                    }).then((docRef) async {
+                      // Update the qrData with the actual student document ID
+                      await docRef.update({
+                        'qrData': jsonEncode({
+                          'parentId': _currentUser!.uid,
+                          'studentDocId': docRef.id,
+                        }),
+                      });
+                    });
 
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(_currentUser!.uid)
-                    .collection('students')
-                    .add({
-                  'name': name,
-                  'rollNo': rollNo,
-                  'qrData': qrData,
-                  'createdAt': FieldValue.serverTimestamp(),
-                });
-
-                Navigator.pop(context);
-                if (mounted) {  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Student added successfully")),
-                  );
-                }
-              }
-            },
-            child: const Text("Add"),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
+                    navigator.pop();
+                    scaffoldMessenger.showSnackBar(
+                      const SnackBar(
+                          content:
+                              Text("Student added successfully")),
+                    );
+                  }
+                },
+                child: const Text("Add"),
+              ),
+            ],
+          );
+        },
+      );
+    }
   /// NOTIFICATIONS PAGE
   Widget _buildNotificationsPage() {
     return const Center(
@@ -374,6 +389,9 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
       String studentId, String currentName, String currentRollNo) {
     final nameController = TextEditingController(text: currentName);
     final rollNoController = TextEditingController(text: currentRollNo);
+    // Capture context-dependent objects before async gaps.
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     showDialog(
       context: context,
@@ -410,12 +428,11 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                   'name': nameController.text,
                   'rollNo': rollNoController.text,
                 });
-                Navigator.pop(context);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Student updated successfully")),
-                  );
-                }
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                      content: Text("Student updated successfully")),
+                );
               }
             },
             child: const Text("Save"),
