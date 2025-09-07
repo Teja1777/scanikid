@@ -14,11 +14,6 @@ class SplashScreen extends StatelessWidget {
       splash: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/img/logo.png',
-            width: screenWidth * 0.35, // 35% of screen width
-          ),
-          const SizedBox(height: 30),
           SizedBox(
             width: screenWidth * 0.25, // 25% of screen width
             child: Image.asset('assets/anim/kid.gif'),
