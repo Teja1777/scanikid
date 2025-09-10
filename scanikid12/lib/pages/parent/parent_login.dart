@@ -25,18 +25,8 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     super.dispose();
   }
   void googleSignIn() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-    }
-    catch(e){
-    }
-    finally{
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    
+    
     // Implement Google Sign-In logic here
   }
 
@@ -55,9 +45,9 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     try {
       final userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
       if (userCredential.user == null) {
         throw Exception('Authentication successful, but user object is null.');
@@ -86,7 +76,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
       } else if (e.code == 'wrong-password') {
         message = 'Wrong password provided for that user.';
       } else if (e.code == 'invalid-credential') {
-        message = 'Invalid credentials, please check your email and password.';
+        message = 'Invalid email or password. Please try again.';
       } else {
         if (kDebugMode) {
           print('Firebase Auth Error: ${e.code} - ${e.message}');
@@ -157,7 +147,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         ),
                         labelText: 'Email',
                         hintText: 'you@example.com',
-                        fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
+                        fillColor: Color.fromRGBO(255, 255, 255, 0.8),
                         filled: true,
                       ),
                       validator: (value) {
@@ -179,7 +169,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         labelText: 'Password',
-                        fillColor: const Color.fromRGBO(255, 255, 255, 0.8),
+                        fillColor: Color.fromRGBO(255, 255, 255, 0.8),
                         filled: true,
                       ),
                       validator: (value) {
@@ -195,15 +185,14 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         : ElevatedButton(
                             onPressed: _signIn,
                             style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: const Color(0xFF01060A),
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Color(0xFF01060A),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              fixedSize: const Size(345, 55),
+                              fixedSize: Size(345, 55),
                             ),
-
                             child: const Text(
                               'Sign In',
                               style: TextStyle(
@@ -238,10 +227,12 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         ),
                       ],
                     ),
+                    // ✅ Hooked up Google button
                     FlutterSocialButton(
-                onTap: () {},
-                buttonType: ButtonType.google, // Button type for different type buttons
-              ),
+                      onTap:(){
+                        googleSignIn();
+                      }
+                    ),
                   ],
                 ),
               ),
