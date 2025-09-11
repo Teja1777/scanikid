@@ -303,7 +303,6 @@ bottomNavigationBar: BottomAppBar(
     ],
   ),
 ),
-
       // Body remains same
       body: SingleChildScrollView(
         child: Padding(
@@ -532,12 +531,9 @@ bottomNavigationBar: BottomAppBar(
     );
   }
 }
-
 class PurchaseItem {
   final String name;
   final double price;
-
   PurchaseItem({required this.name, required this.price});
-
   Map<String, dynamic> toMap() => {'name': name, 'price': price};
 }
