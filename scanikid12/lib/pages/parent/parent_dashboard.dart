@@ -147,6 +147,7 @@ void _showdialogbox(
         builder: (context) {
           final nameController = TextEditingController();
           final rollNoController = TextEditingController();
+          final limitController = TextEditingController();
           // Capture context-dependent objects before async gaps.
           final navigator = Navigator.of(context);
           final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -164,6 +165,12 @@ void _showdialogbox(
                   controller: rollNoController,
                   decoration:
                       const InputDecoration(labelText: "Roll Number"),
+                ),
+                TextField(
+                  controller: limitController,
+                  decoration:const 
+                  InputDecoration(labelText: "daily Limit"),
+                  keyboardType: TextInputType.number,
                 ),
               ],
             ),
@@ -183,6 +190,7 @@ void _showdialogbox(
                         .add({
                       'name': nameController.text,
                       'rollNo': rollNoController.text,
+                      'limit': int.tryParse(limitController.text) ?? 0,
                       'createdAt': FieldValue.serverTimestamp(),
                       'qrData': jsonEncode({
                         'parentId': _currentUser .uid,
@@ -295,6 +303,7 @@ void _showdialogbox(
             final studentData = studentDoc.data() as Map<String, dynamic>;
             final studentName = studentData['name'] ?? 'No Name';
             final studentRollNo = studentData['rollNo'] ?? 'No ID';
+            final studentLimit =studentData['limit']??0;
 
             final qrData =
                 studentData['qrData'] as String? ??
@@ -307,7 +316,7 @@ void _showdialogbox(
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 title: Text(studentName),
-                subtitle: Text("ID: $studentRollNo"),
+                subtitle: Text("ID: $studentRollNo\nLimit:$studentLimit"),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -330,7 +339,7 @@ void _showdialogbox(
                       icon: const Icon(Icons.edit, color: Colors.blue),
                       onPressed: () {
                         _showEditStudentDialog(
-                            studentDoc.id, studentName, studentRollNo);
+                            studentDoc.id, studentName, studentRollNo,studentLimit);
                       },
                     ),
                     IconButton(
@@ -386,9 +395,10 @@ void _showdialogbox(
 
   /// EDIT STUDENT
   void _showEditStudentDialog(
-      String studentId, String currentName, String currentRollNo) {
+      String studentId, String currentName, String currentRollNo,int currentLimit) {
     final nameController = TextEditingController(text: currentName);
     final rollNoController = TextEditingController(text: currentRollNo);
+    final limitController = TextEditingController(text:(currentLimit??0).toString());
     // Capture context-dependent objects before async gaps.
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -408,6 +418,10 @@ void _showdialogbox(
               controller: rollNoController,
               decoration: const InputDecoration(labelText: "Roll Number"),
             ),
+            TextField(
+              controller:limitController,
+              decoration: const InputDecoration(labelText: "daily limit"),
+            )
           ],
         ),
         actions: [
@@ -427,6 +441,7 @@ void _showdialogbox(
                     .update({
                   'name': nameController.text,
                   'rollNo': rollNoController.text,
+                  'limit':int.tryParse(limitController.text)??currentLimit,
                 });
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(

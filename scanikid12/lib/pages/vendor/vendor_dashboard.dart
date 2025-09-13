@@ -227,7 +227,6 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
           const SizedBox(width: 8),
         ],
       ),
-
       // Floating QR Scanner Button
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF6366F1),
