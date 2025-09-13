@@ -238,69 +238,67 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       // Bottom Navigation Bar
+// Replace your current BottomAppBar + BottomNavigationBar section with this:
+
 bottomNavigationBar: BottomAppBar(
   shape: const CircularNotchedRectangle(),
   notchMargin: 8.0,
-  child: BottomNavigationBar(
-    type: BottomNavigationBarType.fixed,
-    currentIndex: _selectedIndex,
-    selectedItemColor: Colors.blue,
-    unselectedItemColor: Colors.black54,
-    onTap: (index) {
-      setState(() {
-        _selectedIndex = index;
-      });
+  child: SizedBox(
+    height: 65, // fixed height for all screens
+    child: BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: _selectedIndex,
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.black54,
+      iconSize: 26, // consistent icon sizing
+      selectedFontSize: 13, // smaller font to avoid overflow
+      unselectedFontSize: 12,
+      onTap: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
 
-      // Navigate only for My Sales
-      if (index == 2) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const VendorSalesPage()),
-        );
-      }
-      // Navigate only for Home
-      else if (index == 0) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const VendorDashboard()),
-        );
-        // Implement navigation to Home
-      }
-      // Navigate only for Profile
-      else if (index == 3) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) =>Placeholder()),
-        );
-        // Implement navigation to Profile
-      }
-      // Implement other navigations as needed
-      else if (index == 1) {
-        // Implement navigation to Transaction History
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) =>Placeholder()),
-        );  
-      }
-    },
-    items: const [
-      BottomNavigationBarItem(
-        icon: Icon(Icons.home_outlined),
-        label: "Home",
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.history),
-        label: "Transaction History",
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.point_of_sale_outlined),
-        label: "My Sales",
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.person_outline),
-        label: "Profile",
-      ),
-    ],
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const VendorSalesPage()),
+          );
+        } else if (index == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const VendorDashboard()),
+          );
+        } else if (index == 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Placeholder()),
+          );
+        } else if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Placeholder()),
+          );
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          label: "Home",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.history),
+          label: "History",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.point_of_sale_outlined),
+          label: "My Sales",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: "Profile",
+        ),
+      ],
+    ),
   ),
 ),
       // Body remains same
