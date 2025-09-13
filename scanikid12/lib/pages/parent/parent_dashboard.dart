@@ -185,7 +185,7 @@ void _showdialogbox(
                       'rollNo': rollNoController.text,
                       'createdAt': FieldValue.serverTimestamp(),
                       'qrData': jsonEncode({
-                        'parentId': _currentUser!.uid,
+                        'parentId': _currentUser .uid,
                         // 'studentId' will be added after doc creation
                       }),
                     }).then((docRef) async {

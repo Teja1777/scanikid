@@ -4,41 +4,50 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_social_button/flutter_social_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 class ParentLoginPage extends StatefulWidget {
   const ParentLoginPage({super.key});
-
   @override
   State<ParentLoginPage> createState() => _ParentLoginPageState();
 }
-
 class _ParentLoginPageState extends State<ParentLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-  void googleSignIn() async {
-    
-    
-    // Implement Google Sign-In logic here
+ void googleSignIn() async {
+  try {
+    setState(() {
+      _isLoading = true;
+    });
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Google sign-in failed: $e')),
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-
+}
   Future<void> _signIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-
     setState(() {
       _isLoading = true;
     });
-
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
@@ -48,16 +57,13 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
       if (userCredential.user == null) {
         throw Exception('Authentication successful, but user object is null.');
       }
-
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .get();
-
       if (!userDoc.exists || userDoc.data()?['role'] != 'parent') {
         await FirebaseAuth.instance.signOut();
         scaffoldMessenger.showSnackBar(
@@ -67,7 +73,6 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
         );
         return;
       }
-
       navigator.pushReplacementNamed('/parent_dashboard');
     } on FirebaseAuthException catch (e) {
       String message;
@@ -101,7 +106,6 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,7 +241,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                 ),
               ),
             ),
-          ),
+          ), 
         ),
       ),
     );
