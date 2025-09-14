@@ -19,6 +19,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   String? _scannedStudentDocId;
   String? _scannedStudentName;
   String? _scannedStudentRollNo;
+  int?    _scannedStudentLimit;
   bool _isProcessingScan = false;
 
   final List<PurchaseItem> _purchaseItems = [];
@@ -76,6 +77,16 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         _scannedStudentDocId = studentDocId;
         _scannedStudentName = studentData['name'] as String?;
         _scannedStudentRollNo = studentData['rollNo'] as String?;
+        final rawLimit = studentData['limit'];
+if (rawLimit is int) {
+  _scannedStudentLimit = rawLimit;
+} else if (rawLimit is String) {
+  _scannedStudentLimit = int.tryParse(rawLimit);
+} else if (rawLimit is double) {
+  _scannedStudentLimit = rawLimit.toInt();
+} else {
+  _scannedStudentLimit = 0;
+}
       });
     } catch (e) {
       if (!mounted) return;
@@ -386,6 +397,13 @@ bottomNavigationBar: BottomAppBar(
                   ),
                   subtitle: Text('ID: ${_scannedStudentRollNo ?? 'N/A'}'),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.money, color: Color(0xFF6366F1)),
+                  title: Text(
+                    'Daily Limit: ₹${_scannedStudentLimit ?? 0}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                )
               ],
             ),
           ),
