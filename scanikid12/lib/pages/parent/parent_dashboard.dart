@@ -194,6 +194,8 @@ void _showdialogbox(
                       'createdAt': FieldValue.serverTimestamp(),
                       'qrData': jsonEncode({
                         'parentId': _currentUser .uid,
+                        'isblocked':false,
+                        'blockeduntil':null,
                         // 'studentId' will be added after doc creation
                       }),
                     }).then((docRef) async {
