@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'dart:typed_data';
 import 'dart:io';
@@ -566,67 +568,61 @@ class QRCodeScreen extends StatefulWidget {
 }
 
 class _QRCodeScreenState extends State<QRCodeScreen> {
-  final ScreenshotController _screenshotController = ScreenshotController();
+  Future<Uint8List> _generateQrImage() async {
+    final qrPainter = QrPainter(
+      data: widget.qrData,
+      version: QrVersions.auto,
+      gapless: true,
+      color: Colors.black,
+      emptyColor: Colors.white,
+    );
 
- Future<void> _saveQrToGallery() async {
-  try {
-    final image = await _screenshotController.capture();
-    if (image != null) {
+    final picData = await qrPainter.toImageData(1024, format: ui.ImageByteFormat.png);
+    if (picData == null) throw Exception("Failed to generate QR image");
+    return Uint8List.view(picData.buffer);
+  }
+
+  Future<void> _saveQrToGallery() async {
+    try {
+      final bytes = await _generateQrImage();
       final result = await ImageGallerySaverPlus.saveImage(
-        Uint8List.fromList(image),
+        bytes,
         name: "scanikid_qr_${widget.studentRollNo}",
         quality: 100,
       );
 
-      if ((result?['isSuccess'] ?? false) == true) {
+      if ((result['isSuccess'] ?? false) == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("QR saved to Gallery")),
+          const SnackBar(content: Text("QR saved to Gallery ✅")),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to save QR")),
+          const SnackBar(content: Text("Failed to save QR ❌")),
         );
       }
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No QR image to save")),
+        SnackBar(content: Text("Error saving QR: $e")),
       );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error saving QR: $e")),
-    );
   }
-}
 
-  Future<void> _shareQrCode() async {
-  // Capture the QR code as an image.
-  final image = await _screenshotController.capture();
-
-  // Check if the image was successfully captured.
-  if (image != null) {
+  Future<void> _shareQr() async {
     try {
-      // Get the temporary directory on the device.
+      final bytes = await _generateQrImage();
       final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/scanikid_qr_${widget.studentRollNo}.png';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
 
-      // Create a new file path for the image.
-      final imagePath = await File('${directory.path}/scanikid_qr.png').create();
-
-      // Write the captured image data to the file.
-      await imagePath.writeAsBytes(image);
-
-      // Use the Share.shareXFiles method to share the image file.
-      await Share.shareXFiles([XFile(imagePath.path)], text: 'Scan this QR code to manage your account on ScaniKid!');
+      await Share.shareXFiles([XFile(file.path)], text: "Here is the QR code for ${widget.studentName}");
     } catch (e) {
-      // Display an error message if the sharing process fails.
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share QR code: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sharing QR: $e")),
+      );
     }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     final qrSize = MediaQuery.of(context).size.width * 0.6;
@@ -643,19 +639,12 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-
-            // Wrap QR in Screenshot
-            Screenshot(
-              controller: _screenshotController,
-              child: QrImageView(
-                data: widget.qrData,
-                version: QrVersions.auto,
-                size: qrSize,
-              ),
+            QrImageView(
+              data: widget.qrData,
+              version: QrVersions.auto,
+              size: qrSize,
             ),
             const SizedBox(height: 30),
-
-            // Save + Share buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -666,7 +655,7 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
-                  onPressed: _shareQrCode,
+                  onPressed: _shareQr,
                   icon: const Icon(Icons.share),
                   label: const Text("Share"),
                 ),
@@ -678,7 +667,6 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
     );
   }
 }
-
 /// VIDEO EXPLANATION PAGE
 class VideoExplanationPage extends StatelessWidget {
   const VideoExplanationPage({super.key});

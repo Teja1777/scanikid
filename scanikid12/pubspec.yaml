@@ -45,7 +45,7 @@ dependencies:
   google_sign_in: ^7.1.1
   flutter_social_button: ^1.1.6+1
   path_provider: ^2.1.2
-  permission_handler: ^10.4.5
+  permission_handler: ^11.3.1
   share_plus: ^8.0.0
   image_gallery_saver_plus: 4.0.1
   screenshot: ^3.0.0
