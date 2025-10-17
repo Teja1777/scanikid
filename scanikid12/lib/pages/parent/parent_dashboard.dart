@@ -128,6 +128,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           ElevatedButton.icon(
             icon: const Icon(Icons.add),
             label: const Text("Add Student"),
+          
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
               foregroundColor: Colors.white, // for icon and text color
