@@ -53,6 +53,7 @@ class DefaultFirebaseOptions {
     appId: '1:248733071874:android:249054b4d70eb797e6851b',
     messagingSenderId: '248733071874',
     projectId: 'scanikid',
+    iosClientId: '248733071874-o735n099ce9ldnvm80u077717n8uvs4k.apps.googleusercontent.com',
     storageBucket: 'scanikid.firebasestorage.app',
   );
 

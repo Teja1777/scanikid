@@ -259,7 +259,7 @@ void _showdialogbox(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),
             label: const Text("Sign Out"),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple,foregroundColor: Colors.white),
           ),
         ],
       ),
