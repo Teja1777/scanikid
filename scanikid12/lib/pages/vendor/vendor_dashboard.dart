@@ -77,6 +77,43 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         _scannedStudentDocId = studentDocId;
         _scannedStudentName = studentData['name'] as String?;
         _scannedStudentRollNo = studentData['rollNo'] as String?;
+        _scannedStudentLimit = studentData['limit'] is int
+            ? studentData['limit'] as int
+            : 0;
+// Robust parsing for 'limit' field
+// Fetch student's unpaid purchases
+Future<void>checkunpaid()async{
+final unpaidPurchases = await FirebaseFirestore.instance
+    .collection('purchases')
+    .where('studentDocId', isEqualTo: studentDocId)
+    .where('status', isEqualTo: 'unpaid')
+    .get();
+
+bool shouldBlock = false;
+
+for (var doc in unpaidPurchases.docs) {
+  final createdAt = doc['createdAt'] as Timestamp?;
+  if (createdAt != null) {
+    final difference = DateTime.now().difference(createdAt.toDate()).inDays;
+    if (difference > 7) {
+      shouldBlock = true;
+
+      // Update Firestore to mark this purchase as blocked
+       doc.reference.update({'isBlocked': true});
+    }
+  }
+}
+
+// Update UI flag for vendor
+if (shouldBlock) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("❌ Student is blocked due to unpaid bills over 7 days!"),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
+
         final rawLimit = studentData['limit'];
 if (rawLimit is int) {
   _scannedStudentLimit = rawLimit;
@@ -87,7 +124,7 @@ if (rawLimit is int) {
 } else {
   _scannedStudentLimit = 0;
 }
-      });
+    }});
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -104,19 +141,33 @@ if (rawLimit is int) {
   }
 
   void _addItem() {
-    final name = _itemNameController.text;
-    final price = double.tryParse(_itemPriceController.text);
+  final name = _itemNameController.text;
+  final price = double.tryParse(_itemPriceController.text);
 
-    if (name.isNotEmpty && price != null && price > 0) {
-      setState(() {
-        _purchaseItems.add(PurchaseItem(name: name, price: price));
-        _totalAmount += price;
-      });
-      _itemNameController.clear();
-      _itemPriceController.clear();
-      FocusScope.of(context).unfocus();
+  if (name.isNotEmpty && price != null && price > 0) {
+    final limit = (_scannedStudentLimit ?? 0).toDouble();
+
+    if (_totalAmount + price > limit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "❌ Limit exceeded! Cannot add this item.\nDaily Limit: ₹$limit",
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Don’t add item
     }
+
+    setState(() {
+      _purchaseItems.add(PurchaseItem(name: name, price: price));
+      _totalAmount += price;
+    });
+    _itemNameController.clear();
+    _itemPriceController.clear();
+    FocusScope.of(context).unfocus();
   }
+}
 
   Future<void> _sendReceipt() async {
     if (_purchaseItems.isEmpty) {
@@ -407,6 +458,7 @@ bottomNavigationBar: BottomAppBar(
               ],
             ),
           ),
+          
         ),
         const SizedBox(height: 24),
 
@@ -478,8 +530,33 @@ bottomNavigationBar: BottomAppBar(
             ],
           ),
         ),
-        const SizedBox(height: 24),
 
+        const SizedBox(height: 24),
+        Padding(
+  padding: const EdgeInsets.symmetric(vertical: 8.0),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      const Text(
+        'Remaining Limit:',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      Builder(
+        builder: (_) {
+          final remaining = (_scannedStudentLimit ?? 0) - _totalAmount;
+          return Text(
+            '₹${remaining.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: remaining >= 0 ? Colors.green : Colors.red,
+            ),
+          );
+        },
+      ),
+    ],
+  ),
+),
         Row(
           children: [
             Expanded(
@@ -489,26 +566,34 @@ bottomNavigationBar: BottomAppBar(
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isSendingReceipt ? null : _sendReceipt,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                ),
-                child: _isSendingReceipt
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Send Receipt',
-                      ),
+           Expanded(
+  child: ElevatedButton(
+    onPressed: (_isSendingReceipt ||
+                ((_scannedStudentLimit ?? 0) - _totalAmount) < 0)
+        ? () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("❌ Cannot send receipt. Limit exceeded!"),
+                backgroundColor: Colors.red,
               ),
+            );
+          }
+        : _sendReceipt,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF6366F1),
+    ),
+    child: _isSendingReceipt
+        ? const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
             ),
+          )
+        : const Text('Send Receipt'),
+  ),
+),
           ],
         ),
       ],

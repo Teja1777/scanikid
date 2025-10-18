@@ -1,9 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 import 'package:scanikid12/pages/parent/parent_login.dart'; // ✅ import login page
 
@@ -73,7 +80,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
                     .delete();
 
                 // Delete Firebase Auth user
-                await _currentUser!.delete();
+                await _currentUser.delete();
 
                 if (mounted) {
                   Navigator.pushReplacement(
@@ -121,6 +128,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
           ElevatedButton.icon(
             icon: const Icon(Icons.add),
             label: const Text("Add Student"),
+          
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
               foregroundColor: Colors.white, // for icon and text color
@@ -194,13 +202,15 @@ void _showdialogbox(
                       'createdAt': FieldValue.serverTimestamp(),
                       'qrData': jsonEncode({
                         'parentId': _currentUser .uid,
+                        'isblocked':false,
+                        'blockeduntil':null,
                         // 'studentId' will be added after doc creation
                       }),
                     }).then((docRef) async {
                       // Update the qrData with the actual student document ID
                       await docRef.update({
                         'qrData': jsonEncode({
-                          'parentId': _currentUser!.uid,
+                          'parentId': _currentUser.uid,
                           'studentDocId': docRef.id,
                         }),
                       });
@@ -308,7 +318,7 @@ void _showdialogbox(
             final qrData =
                 studentData['qrData'] as String? ??
                 jsonEncode({
-                  'parentId': _currentUser!.uid,
+                  'parentId': _currentUser.uid,
                   'studentDocId': studentDoc.id,
                 });
 
@@ -398,7 +408,7 @@ void _showdialogbox(
       String studentId, String currentName, String currentRollNo,int currentLimit) {
     final nameController = TextEditingController(text: currentName);
     final rollNoController = TextEditingController(text: currentRollNo);
-    final limitController = TextEditingController(text:(currentLimit??0).toString());
+    final limitController = TextEditingController(text:(currentLimit).toString());
     // Capture context-dependent objects before async gaps.
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -489,21 +499,11 @@ void _showdialogbox(
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _currentUser?.email ?? "Parent",
+                    _currentUser.email ?? "Parent",
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ],
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.info, color: Colors.deepPurple),
-              title: const Text("About Us"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AboutUsPage()),
-                );
-              },
             ),
             ListTile(
               leading: const Icon(Icons.video_library, color: Colors.deepPurple),
@@ -550,10 +550,13 @@ void _showdialogbox(
 }
 
 /// QR CODE SCREEN
-class QRCodeScreen extends StatelessWidget {
+
+/// ABOUT US PAGE
+class QRCodeScreen extends StatefulWidget {
   final String qrData;
   final String studentName;
   final String studentRollNo;
+
   const QRCodeScreen({
     super.key,
     required this.qrData,
@@ -562,8 +565,69 @@ class QRCodeScreen extends StatelessWidget {
   });
 
   @override
+  State<QRCodeScreen> createState() => _QRCodeScreenState();
+}
+
+class _QRCodeScreenState extends State<QRCodeScreen> {
+  Future<Uint8List> _generateQrImage() async {
+    final qrPainter = QrPainter(
+      data: widget.qrData,
+      version: QrVersions.auto,
+      gapless: true,
+      color: Colors.black,
+      emptyColor: Colors.white,
+    );
+
+    final picData = await qrPainter.toImageData(1024, format: ui.ImageByteFormat.png);
+    if (picData == null) throw Exception("Failed to generate QR image");
+    return Uint8List.view(picData.buffer);
+  }
+
+  Future<void> _saveQrToGallery() async {
+    try {
+      final bytes = await _generateQrImage();
+      final result = await ImageGallerySaverPlus.saveImage(
+        bytes,
+        name: "scanikid_qr_${widget.studentRollNo}",
+        quality: 100,
+      );
+
+      if ((result['isSuccess'] ?? false) == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("QR saved to Gallery ✅")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to save QR ❌")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error saving QR: $e")),
+      );
+    }
+  }
+
+  Future<void> _shareQr() async {
+    try {
+      final bytes = await _generateQrImage();
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/scanikid_qr_${widget.studentRollNo}.png';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      await Share.shareXFiles([XFile(file.path)], text: "Here is the QR code for ${widget.studentName}");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sharing QR: $e")),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final qrSize = MediaQuery.of(context).size.width * 0.6;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Student QR Code')),
       body: Center(
@@ -571,42 +635,39 @@ class QRCodeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'QR Code for $studentName (ID: $studentRollNo)',
+              'QR Code for ${widget.studentName} (ID: ${widget.studentRollNo})',
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            QrImageView(data: qrData, version: QrVersions.auto, size: qrSize),
+            QrImageView(
+              data: widget.qrData,
+              version: QrVersions.auto,
+              size: qrSize,
+            ),
+            const SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _saveQrToGallery,
+                  icon: const Icon(Icons.download),
+                  label: const Text("Save"),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                  onPressed: _shareQr,
+                  icon: const Icon(Icons.share),
+                  label: const Text("Share"),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 }
-
-/// ABOUT US PAGE
-class AboutUsPage extends StatelessWidget {
-  const AboutUsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("About Us")),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            "ScaniKid is a smart platform for parents to manage student purchases "
-            "and ensure secure transactions. Our goal is to make school purchases safe and easy.",
-            style: TextStyle(fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// VIDEO EXPLANATION PAGE
 class VideoExplanationPage extends StatelessWidget {
   const VideoExplanationPage({super.key});
