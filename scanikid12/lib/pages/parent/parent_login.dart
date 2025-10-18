@@ -21,6 +21,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     serverClientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
   );
   @override
+
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
