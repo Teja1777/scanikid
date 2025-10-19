@@ -124,7 +124,7 @@ class _ParentDashboardScreenState extends State<ParentDashboard> {
             'Manage your children and their purchases',
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 40), 
           ElevatedButton.icon(
             icon: const Icon(Icons.add),
             label: const Text("Add Student"),
