@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'dart:typed_data';
@@ -10,7 +13,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:scanikid12/pages/parent/parent_purchases_page.dart';
 import 'package:scanikid12/pages/parent/parent_login.dart'; // ✅ import login page
-import 'package:share_plus/share_plus.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -199,7 +201,7 @@ void _showdialogbox(
                       'limit': int.tryParse(limitController.text) ?? 0,
                       'createdAt': FieldValue.serverTimestamp(),
                       'qrData': jsonEncode({
-                        'parentId': _currentUser.uid,
+                        'parentId': _currentUser .uid,
                         'isblocked':false,
                         'blockeduntil':null,
                         // 'studentId' will be added after doc creation
@@ -267,7 +269,7 @@ void _showdialogbox(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),
             label: const Text("Sign Out"),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple,foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
           ),
         ],
       ),
