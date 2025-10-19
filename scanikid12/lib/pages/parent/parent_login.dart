@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_social_button/flutter_social_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:scanikid12/firebase_options.dart';
 class ParentLoginPage extends StatefulWidget {
   const ParentLoginPage({super.key});
   @override
@@ -14,6 +15,11 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  // Create a reusable GoogleSignIn instance
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
+  );
   @override
 
   void dispose() {
@@ -21,27 +27,72 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
- void googleSignIn() async {
-  try {
-    setState(() {
-      _isLoading = true;
-    });
+
+  void googleSignIn() async {
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
-      return;
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Google sign-in failed: $e')),
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+
+      // 1. Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // The user canceled the sign-in
+        setState(() { _isLoading = false; });
+        return;
+      }
+
+      // 2. Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // 3. Create a new credential for Firebase
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // 4. Sign in to Firebase with the credential
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user == null) {
+        throw Exception('Google sign-in successful, but user object is null.');
+      }
+
+      // 5. Check if the user exists in Firestore and has the 'parent' role
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists && userDoc.data()?['role'] == 'parent') {
+        // User is a parent, navigate to dashboard
+        navigator.pushReplacementNamed('/parent_dashboard');
+      } else {
+        // Not a parent or doesn't exist, sign out and show error
+        await _googleSignIn.signOut();
+        await FirebaseAuth.instance.signOut();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('No parent account found for this Google account.')),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Google sign-in failed: $e');
+      }
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Google sign-in failed. Please try again.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
+
   Future<void> _signIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -236,7 +287,8 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                     FlutterSocialButton(
                       onTap:(){
                         googleSignIn();
-                      }
+                      },
+                      buttonType: ButtonType.google,
                     ),
                   ],
                 ),

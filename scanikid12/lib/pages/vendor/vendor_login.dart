@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_social_button/flutter_social_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:scanikid12/firebase_options.dart';
 
 class VendorLoginPage extends StatefulWidget {
   const VendorLoginPage({super.key});
@@ -18,16 +19,74 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  // Create a reusable GoogleSignIn instance
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
+  );
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
+
   void googleSignIn() async {
-    
-    
-    // Implement Google Sign-In logic here
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // 1. Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // The user canceled the sign-in
+        setState(() { _isLoading = false; });
+        return;
+      }
+
+      // 2. Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // 3. Create a new credential for Firebase
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // 4. Sign in to Firebase with the credential
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user == null) {
+        throw Exception('Google sign-in successful, but user object is null.');
+      }
+
+      // 5. Check if the user exists in Firestore and has the 'vendor' role
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists && userDoc.data()?['role'] == 'vendor') {
+        // User is a vendor, navigate to dashboard
+        navigator.pushReplacementNamed('/vendor_dashboard');
+      } else {
+        // Not a vendor or doesn't exist, sign out and show error
+        await _googleSignIn.signOut();
+        await FirebaseAuth.instance.signOut();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('No vendor account found for this Google account.')),
+        );
+      }
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) setState(() { _isLoading = false; });
+    }
   }
 
   Future<void> _signIn() async {
@@ -224,9 +283,9 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                       ],
                     ),
                     FlutterSocialButton(
-                onTap: () {},
-                buttonType: ButtonType.google, // Button type for different type buttons
-              ),
+                      onTap: googleSignIn,
+                      buttonType: ButtonType.google,
+                    ),
                   ],
                 ),
               ),
