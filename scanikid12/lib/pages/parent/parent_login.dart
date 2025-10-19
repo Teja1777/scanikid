@@ -2,46 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_social_button/flutter_social_button.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+
 class ParentLoginPage extends StatefulWidget {
   const ParentLoginPage({super.key});
   @override
   State<ParentLoginPage> createState() => _ParentLoginPageState();
 }
+
 class _ParentLoginPageState extends State<ParentLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   @override
-
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
- void googleSignIn() async {
-  try {
-    setState(() {
-      _isLoading = true;
-    });
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Google sign-in failed: $e')),
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-}
+
   Future<void> _signIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -55,9 +34,9 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
     try {
       final userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
       if (userCredential.user == null) {
         throw Exception('Authentication successful, but user object is null.');
       }
@@ -107,6 +86,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,7 +109,7 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/img/logo.png',
+                      'assets/img/app_logo.png',
                       width: MediaQuery.of(context).size.width * 0.3,
                       fit: BoxFit.contain,
                     ),
@@ -232,17 +212,11 @@ class _ParentLoginPageState extends State<ParentLoginPage> {
                         ),
                       ],
                     ),
-                    // ✅ Hooked up Google button
-                    FlutterSocialButton(
-                      onTap:(){
-                        googleSignIn();
-                      }
-                    ),
                   ],
                 ),
               ),
             ),
-          ), 
+          ),
         ),
       ),
     );

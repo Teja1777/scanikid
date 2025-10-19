@@ -97,15 +97,17 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 16.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/img/logo.png',
+                      'assets/img/app_logo.png',
                       width: MediaQuery.of(context).size.width * 0.3,
                       fit: BoxFit.contain,
                     ),
@@ -206,8 +208,7 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
                         : ElevatedButton(
                             onPressed: _signUp,
                             style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               backgroundColor: const Color(0xFF01060A),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
@@ -229,15 +230,14 @@ class _VendorSignUpPageState extends State<VendorSignUpPage> {
                       children: [
                         const Text(
                           'Already have an account?',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.black54, fontSize: 16),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(
-                                context, '/vendor_login');
+                              context,
+                              '/vendor_login',
+                            );
                           },
                           child: const Text(
                             'Sign In',

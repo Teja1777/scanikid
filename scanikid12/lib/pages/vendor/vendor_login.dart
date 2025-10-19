@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_social_button/flutter_social_button.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class VendorLoginPage extends StatefulWidget {
   const VendorLoginPage({super.key});
@@ -24,11 +22,6 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
-  void googleSignIn() async {
-    
-    
-    // Implement Google Sign-In logic here
-  }
 
   Future<void> _signIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
@@ -43,10 +36,11 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
       if (userCredential.user == null) {
         throw Exception('Authentication successful, but user object is null.');
@@ -60,7 +54,9 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
       if (!userDoc.exists || userDoc.data()?['role'] != 'vendor') {
         await FirebaseAuth.instance.signOut();
         scaffoldMessenger.showSnackBar(
-          const SnackBar(content: Text('No vendor account found with this email.')),
+          const SnackBar(
+            content: Text('No vendor account found with this email.'),
+          ),
         );
         return;
       }
@@ -86,7 +82,9 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
         print('An unexpected error occurred during sign-in: $e');
       }
       scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: ${e.toString()}')),
+        SnackBar(
+          content: Text('An unexpected error occurred: ${e.toString()}'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -120,7 +118,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
 
                   children: [
                     Image.asset(
-                      'assets/img/logo.png',
+                      'assets/img/app_logo.png',
                       width: MediaQuery.of(context).size.width * 0.3,
                       fit: BoxFit.contain,
                     ),
@@ -223,10 +221,6 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                         ),
                       ],
                     ),
-                    FlutterSocialButton(
-                onTap: () {},
-                buttonType: ButtonType.google, // Button type for different type buttons
-              ),
                   ],
                 ),
               ),

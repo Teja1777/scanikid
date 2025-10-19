@@ -19,7 +19,7 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
   String? _scannedStudentDocId;
   String? _scannedStudentName;
   String? _scannedStudentRollNo;
-  int?    _scannedStudentLimit;
+  int? _scannedStudentLimit;
   bool _isProcessingScan = false;
 
   final List<PurchaseItem> _purchaseItems = [];
@@ -80,56 +80,61 @@ class _VendorDashboardScreenState extends State<VendorDashboard> {
         _scannedStudentLimit = studentData['limit'] is int
             ? studentData['limit'] as int
             : 0;
-// Robust parsing for 'limit' field
-// Fetch student's unpaid purchases
-Future<void>checkunpaid()async{
-final unpaidPurchases = await FirebaseFirestore.instance
-    .collection('purchases')
-    .where('studentDocId', isEqualTo: studentDocId)
-    .where('status', isEqualTo: 'unpaid')
-    .get();
+        // Robust parsing for 'limit' field
+        // Fetch student's unpaid purchases
+        Future<void> checkunpaid() async {
+          final unpaidPurchases = await FirebaseFirestore.instance
+              .collection('purchases')
+              .where('studentDocId', isEqualTo: studentDocId)
+              .where('status', isEqualTo: 'unpaid')
+              .get();
 
-bool shouldBlock = false;
+          bool shouldBlock = false;
 
-for (var doc in unpaidPurchases.docs) {
-  final createdAt = doc['createdAt'] as Timestamp?;
-  if (createdAt != null) {
-    final difference = DateTime.now().difference(createdAt.toDate()).inDays;
-    if (difference > 7) {
-      shouldBlock = true;
+          for (var doc in unpaidPurchases.docs) {
+            final createdAt = doc['createdAt'] as Timestamp?;
+            if (createdAt != null) {
+              final difference = DateTime.now()
+                  .difference(createdAt.toDate())
+                  .inDays;
+              if (difference > 7) {
+                shouldBlock = true;
 
-      // Update Firestore to mark this purchase as blocked
-       doc.reference.update({'isBlocked': true});
-    }
-  }
-}
+                // Update Firestore to mark this purchase as blocked
+                doc.reference.update({'isBlocked': true});
+              }
+            }
+          }
 
-// Update UI flag for vendor
-if (shouldBlock) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("❌ Student is blocked due to unpaid bills over 7 days!"),
-      backgroundColor: Colors.red,
-    ),
-  );
-}
+          // Update UI flag for vendor
+          if (shouldBlock) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "❌ Student is blocked due to unpaid bills over 7 days!",
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
 
-        final rawLimit = studentData['limit'];
-if (rawLimit is int) {
-  _scannedStudentLimit = rawLimit;
-} else if (rawLimit is String) {
-  _scannedStudentLimit = int.tryParse(rawLimit);
-} else if (rawLimit is double) {
-  _scannedStudentLimit = rawLimit.toInt();
-} else {
-  _scannedStudentLimit = 0;
-}
-    }});
+          final rawLimit = studentData['limit'];
+          if (rawLimit is int) {
+            _scannedStudentLimit = rawLimit;
+          } else if (rawLimit is String) {
+            _scannedStudentLimit = int.tryParse(rawLimit);
+          } else if (rawLimit is double) {
+            _scannedStudentLimit = rawLimit.toInt();
+          } else {
+            _scannedStudentLimit = 0;
+          }
+        }
+      });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Scan failed: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
       _resetScan();
     } finally {
       if (mounted) {
@@ -141,33 +146,33 @@ if (rawLimit is int) {
   }
 
   void _addItem() {
-  final name = _itemNameController.text;
-  final price = double.tryParse(_itemPriceController.text);
+    final name = _itemNameController.text;
+    final price = double.tryParse(_itemPriceController.text);
 
-  if (name.isNotEmpty && price != null && price > 0) {
-    final limit = (_scannedStudentLimit ?? 0).toDouble();
+    if (name.isNotEmpty && price != null && price > 0) {
+      final limit = (_scannedStudentLimit ?? 0).toDouble();
 
-    if (_totalAmount + price > limit) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "❌ Limit exceeded! Cannot add this item.\nDaily Limit: ₹$limit",
+      if (_totalAmount + price > limit) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "❌ Limit exceeded! Cannot add this item.\nDaily Limit: ₹$limit",
+            ),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return; // Don’t add item
-    }
+        );
+        return; // Don’t add item
+      }
 
-    setState(() {
-      _purchaseItems.add(PurchaseItem(name: name, price: price));
-      _totalAmount += price;
-    });
-    _itemNameController.clear();
-    _itemPriceController.clear();
-    FocusScope.of(context).unfocus();
+      setState(() {
+        _purchaseItems.add(PurchaseItem(name: name, price: price));
+        _totalAmount += price;
+      });
+      _itemNameController.clear();
+      _itemPriceController.clear();
+      FocusScope.of(context).unfocus();
+    }
   }
-}
 
   Future<void> _sendReceipt() async {
     if (_purchaseItems.isEmpty) {
@@ -195,7 +200,9 @@ if (rawLimit is int) {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      await FirebaseFirestore.instance.collection('purchases').add(purchaseData);
+      await FirebaseFirestore.instance
+          .collection('purchases')
+          .add(purchaseData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Receipt sent successfully!')),
@@ -268,12 +275,14 @@ if (rawLimit is int) {
               Text(
                 _currentUser?.displayName ?? 'Vendor',
                 style: const TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold),
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Text(
                 'Vendor Account',
                 style: TextStyle(color: Colors.black54, fontSize: 12),
-              )
+              ),
             ],
           ),
           const SizedBox(width: 8),
@@ -299,69 +308,72 @@ if (rawLimit is int) {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       // Bottom Navigation Bar
-// Replace your current BottomAppBar + BottomNavigationBar section with this:
+      // Replace your current BottomAppBar + BottomNavigationBar section with this:
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: SizedBox(
+          height: 65, // fixed height for all screens
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+            selectedItemColor: Colors.blue,
+            unselectedItemColor: Colors.black54,
+            iconSize: 24, // consistent icon sizing
+            selectedFontSize: 13, // smaller font to avoid overflow
+            unselectedFontSize: 11,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
 
-bottomNavigationBar: BottomAppBar(
-  shape: const CircularNotchedRectangle(),
-  notchMargin: 8.0,
-  child: SizedBox(
-    height: 65, // fixed height for all screens
-    child: BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: _selectedIndex,
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.black54,
-      iconSize: 26, // consistent icon sizing
-      selectedFontSize: 13, // smaller font to avoid overflow
-      unselectedFontSize: 12,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-
-        if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VendorSalesPage()),
-          );
-        } else if (index == 0) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VendorDashboard()),
-          );
-        } else if (index == 3) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const Placeholder()),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const Placeholder()),
-          );
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          label: "Home",
+              if (index == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VendorSalesPage(),
+                  ),
+                );
+              } else if (index == 0) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VendorDashboard(),
+                  ),
+                );
+              } else if (index == 3) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Placeholder()),
+                );
+              } else if (index == 1) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Placeholder()),
+                );
+              }
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                label: "Home",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                label: "History",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.point_of_sale_outlined),
+                label: "My Sales",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                label: "Profile",
+              ),
+            ],
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history),
-          label: "History",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.point_of_sale_outlined),
-          label: "My Sales",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          label: "Profile",
-        ),
-      ],
-    ),
-  ),
-),
+      ),
       // Body remains same
       body: SingleChildScrollView(
         child: Padding(
@@ -378,7 +390,7 @@ bottomNavigationBar: BottomAppBar(
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               const SizedBox(height: 24),
 
               _buildNavigationControls(),
@@ -403,12 +415,13 @@ bottomNavigationBar: BottomAppBar(
               context,
               MaterialPageRoute(builder: (context) => Placeholder()),
             );
-            // Implement navigation to Block list    
+            // Implement navigation to Block list
           },
-        ),           
+        ),
       ],
     );
   }
+
   Widget _buildScannerContent() {
     if (_isProcessingScan) {
       return const Center(child: CircularProgressIndicator());
@@ -425,6 +438,7 @@ bottomNavigationBar: BottomAppBar(
       ),
     );
   }
+
   Widget _buildReceiptCreationUI() {
     return Column(
       children: [
@@ -454,11 +468,10 @@ bottomNavigationBar: BottomAppBar(
                     'Daily Limit: ₹${_scannedStudentLimit ?? 0}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                )
+                ),
               ],
             ),
           ),
-          
         ),
         const SizedBox(height: 24),
 
@@ -483,8 +496,9 @@ bottomNavigationBar: BottomAppBar(
                   labelText: 'Price',
                   border: OutlineInputBorder(),
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -533,30 +547,30 @@ bottomNavigationBar: BottomAppBar(
 
         const SizedBox(height: 24),
         Padding(
-  padding: const EdgeInsets.symmetric(vertical: 8.0),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      const Text(
-        'Remaining Limit:',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-      Builder(
-        builder: (_) {
-          final remaining = (_scannedStudentLimit ?? 0) - _totalAmount;
-          return Text(
-            '₹${remaining.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: remaining >= 0 ? Colors.green : Colors.red,
-            ),
-          );
-        },
-      ),
-    ],
-  ),
-),
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Remaining Limit:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              Builder(
+                builder: (_) {
+                  final remaining = (_scannedStudentLimit ?? 0) - _totalAmount;
+                  return Text(
+                    '₹${remaining.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: remaining >= 0 ? Colors.green : Colors.red,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
         Row(
           children: [
             Expanded(
@@ -566,34 +580,37 @@ bottomNavigationBar: BottomAppBar(
               ),
             ),
             const SizedBox(width: 16),
-           Expanded(
-  child: ElevatedButton(
-    onPressed: (_isSendingReceipt ||
-                ((_scannedStudentLimit ?? 0) - _totalAmount) < 0)
-        ? () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("❌ Cannot send receipt. Limit exceeded!"),
-                backgroundColor: Colors.red,
+            Expanded(
+              child: ElevatedButton(
+                onPressed:
+                    (_isSendingReceipt ||
+                        ((_scannedStudentLimit ?? 0) - _totalAmount) < 0)
+                    ? () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "❌ Cannot send receipt. Limit exceeded!",
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    : _sendReceipt,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                ),
+                child: _isSendingReceipt
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Send Receipt'),
               ),
-            );
-          }
-        : _sendReceipt,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF6366F1),
-    ),
-    child: _isSendingReceipt
-        ? const SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white,
             ),
-          )
-        : const Text('Send Receipt'),
-  ),
-),
           ],
         ),
       ],
@@ -631,6 +648,7 @@ bottomNavigationBar: BottomAppBar(
     );
   }
 }
+
 class PurchaseItem {
   final String name;
   final double price;
